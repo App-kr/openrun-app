@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../features/performances/models/performance.dart';
@@ -26,6 +28,16 @@ const allowedBookingDomains = {
   'artincheon.org',
   'gjart.kr',
   'daejeonarts.or.kr',
+  // ticketing platforms
+  'interpark.com',
+  'tickets.interpark.com',
+  'ticket.yes24.com',
+  'yes24.com',
+  'ticketlink.co.kr',
+  'melon.com',
+  'naver.com',
+  'naruart.or.kr',
+  'edu.junggu.seoul.kr',
   // legacy
   'classicbusan.busan.go.kr',
   'kbssym.or.kr',
@@ -49,12 +61,16 @@ class ApiService {
   ApiService(this._cache) {
     _dio = Dio(BaseOptions(
       baseUrl: backendUrl,
-      connectTimeout: const Duration(seconds: 60),
-      receiveTimeout: const Duration(seconds: 60),
+      connectTimeout: const Duration(seconds: 120),
+      receiveTimeout: const Duration(seconds: 120),
       headers: {'Content-Type': 'application/json'},
+      responseDecoder: (responseBytes, options, responseBody) =>
+          utf8.decode(responseBytes, allowMalformed: true),
     ));
 
-    _dio.interceptors.add(LogInterceptor(responseBody: false));
+    if (kDebugMode) {
+      _dio.interceptors.add(LogInterceptor(responseBody: false, requestBody: false));
+    }
   }
 
   /// Ping /health to wake the Render free-tier server.
@@ -77,7 +93,7 @@ class ApiService {
   Future<List<Performance>> fetchPerformances({
     String category = 'all',
     String region = 'all',
-    int limit = 50,
+    int limit = 500,
   }) async {
     try {
       final resp = await _dio.get(
@@ -89,16 +105,22 @@ class ApiService {
         },
       );
 
-      final list = (resp.data['performances'] as List)
+      final rawList = resp.data['performances'] as List;
+      final list = rawList
           .map((e) => Performance.fromJson(e as Map<String, dynamic>))
           .toList();
 
-      await _cache.savePerformances(list, category: category, region: region);
+      _cache.savePerformances(list, category: category, region: region).catchError((e) {
+        debugPrint('[API] cache save error (ignored): $e');
+      });
       return list;
     } on DioException {
-      // Fallback to cache
+      // Network error — fallback to cache
       final cached = await _cache.loadPerformances(category: category, region: region);
       if (cached.isNotEmpty) return cached;
+      rethrow;
+    } catch (e, st) {
+      debugPrint('[API] fetchPerformances parse error: $e\n$st');
       rethrow;
     }
   }
