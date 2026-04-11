@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme.dart';
@@ -28,6 +29,49 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _category = prefs.getString('selected_category') ?? 'all';
       _loadedPrefs = true;
     });
+  }
+
+  Future<void> _showPrivacyPolicy(BuildContext context) async {
+    final html = await rootBundle.loadString('assets/privacy_policy.html');
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (_) => Dialog(
+        insetPadding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 4, 0),
+              child: Row(
+                children: [
+                  const Expanded(child: Text('개인정보처리방침', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700))),
+                  IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: SelectableText(
+                  _stripHtml(html),
+                  style: const TextStyle(fontSize: 14, height: 1.7, color: Color(0xFF333333)),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static String _stripHtml(String html) {
+    return html
+        .replaceAll(RegExp(r'<style[^>]*>.*?</style>', dotAll: true), '')
+        .replaceAll(RegExp(r'<[^>]+>'), '')
+        .replaceAll(RegExp(r'&[a-zA-Z]+;'), ' ')
+        .replaceAll(RegExp(r'\n{3,}'), '\n\n')
+        .trim();
   }
 
   String get _categoryLabel => switch (_category) {
@@ -74,6 +118,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     if (!mounted) return;
                     context.go('/genre');
                   },
+                ),
+                const SizedBox(height: 24),
+                _SectionHeader('법적 정보'),
+                const _SettingsTile(
+                  icon: Icons.copyright_rounded,
+                  title: '개발자',
+                  subtitle: '© 2026 Scarlett. All rights reserved.',
+                ),
+                const _SettingsTile(
+                  icon: Icons.verified_outlined,
+                  title: '특허출원',
+                  subtitle: '출원번호 10-2026-0064854',
+                ),
+                _SettingsTile(
+                  icon: Icons.privacy_tip_outlined,
+                  title: '개인정보처리방침',
+                  subtitle: '수집 항목 및 이용 안내',
+                  onTap: () => _showPrivacyPolicy(context),
                 ),
               ],
             )

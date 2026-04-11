@@ -25,7 +25,7 @@ class CacheService {
     final path = join(await getDatabasesPath(), 'openrun_cache.db');
     return openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE performances (
@@ -36,6 +36,17 @@ class CacheService {
             cached_at INTEGER NOT NULL
           )
         ''');
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          // Add category/region columns if missing
+          try {
+            await db.execute("ALTER TABLE performances ADD COLUMN category TEXT NOT NULL DEFAULT 'all'");
+          } catch (_) {}
+          try {
+            await db.execute("ALTER TABLE performances ADD COLUMN region TEXT NOT NULL DEFAULT 'all'");
+          } catch (_) {}
+        }
       },
     );
   }

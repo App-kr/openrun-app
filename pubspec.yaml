@@ -46,6 +46,9 @@ dependencies:
   # Storage
   shared_preferences: ^2.2.3
 
+  # Font
+  google_fonts: ^6.2.1
+
   # Utilities
   url_launcher: ^6.3.0
   share_plus: ^9.0.0
@@ -68,3 +71,4 @@ flutter:
     - assets/images/
     - assets/icons/classic/
     - assets/icons/gugak/
+    - assets/privacy_policy.html

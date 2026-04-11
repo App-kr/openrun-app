@@ -6,12 +6,15 @@ class CountdownTimer extends StatefulWidget {
   final DateTime openAt;
   final String? bookingUrl;
   final VoidCallback? onBook;
+  /// When false (card view), hides the "예매하기" button and shows plain text instead.
+  final bool showBookButton;
 
   const CountdownTimer({
     super.key,
     required this.openAt,
     this.bookingUrl,
     this.onBook,
+    this.showBookButton = false,
   });
 
   @override
@@ -43,30 +46,41 @@ class _CountdownTimerState extends State<CountdownTimer> {
 
   @override
   Widget build(BuildContext context) {
-    // Open: show "예매하기" button
+    // Already open
     if (_remaining.isNegative || _remaining == Duration.zero) {
-      return Semantics(
-        label: '예매하기 버튼',
-        button: true,
-        child: GestureDetector(
-          onTap: widget.onBook,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-            decoration: BoxDecoration(
-              color: AppColors.open,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Text(
-              '예매하기',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
+      if (widget.showBookButton) {
+        return Semantics(
+          label: '예매하기 버튼',
+          button: true,
+          child: GestureDetector(
+            onTap: widget.onBook,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+              decoration: BoxDecoration(
+                color: AppColors.open,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Text(
+                '예매하기',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
               ),
             ),
           ),
-        ),
-      );
+        );
+      } else {
+        return const Text(
+          '오픈중',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: AppColors.open,
+          ),
+        );
+      }
     }
 
     final String label;
@@ -96,7 +110,7 @@ class _CountdownTimerState extends State<CountdownTimer> {
       child: Text(
         label,
         style: TextStyle(
-          fontSize: 13,
+          fontSize: 14,
           fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
           color: color,
         ),

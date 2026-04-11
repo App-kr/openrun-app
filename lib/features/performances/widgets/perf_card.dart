@@ -1,332 +1,349 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme.dart';
 import '../models/performance.dart';
-import '../providers/alarm_provider.dart';
-import '../../../shared/services/api_service.dart';
 import '../../../shared/utils/genre_icon_provider.dart';
-import 'badge_widget.dart';
+import 'alarm_button_widget.dart';
 import 'countdown_timer.dart';
 
-class PerfCard extends ConsumerWidget {
-  final Performance perf;
+// ── HTML entity decoder ────────────────────────────────────────────
+String _htmlDecode(String text) => text
+    .replaceAll('&#39;', "'")
+    .replaceAll('&amp;', '&')
+    .replaceAll('&lt;', '<')
+    .replaceAll('&gt;', '>')
+    .replaceAll('&quot;', '"')
+    .replaceAll('&#x27;', "'")
+    .replaceAll('&apos;', "'")
+    .replaceAll('&#34;', '"')
+    .replaceAll('&nbsp;', ' ');
 
-  const PerfCard({super.key, required this.perf});
+// ── Status helpers ─────────────────────────────────────────────────
+enum _TicketStatus { open, soonOpen, upcoming }
+
+_TicketStatus _getStatus(DateTime openAt) {
+  final now = DateTime.now();
+  if (openAt.isBefore(now)) return _TicketStatus.open;
+  if (openAt.difference(now).inDays < 7) return _TicketStatus.soonOpen;
+  return _TicketStatus.upcoming;
+}
+
+class PerfCard extends StatelessWidget {
+  final Performance perf;
+  final VoidCallback? onTap;
+
+  const PerfCard({super.key, required this.perf, this.onTap});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final isUrgent = perf.isUrgent;
+  Widget build(BuildContext context) {
+    final isGugak = perf.category == 'gugak';
+    final genreLabel = isGugak ? 'GUGAK' : 'CLASSIC';
+    final status = _getStatus(perf.ticketOpenAt);
 
     return Semantics(
       label: '${perf.title}, ${perf.venue}, ${perf.region}',
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isUrgent ? Colors.red.shade200 : AppColors.divider,
-            width: isUrgent ? 1.5 : 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
+      button: onTap != null,
+      child: Card(
+        margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+        elevation: 1,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: Color(0xFFE2E8F0), width: 0.5),
         ),
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(14),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Poster
-                  Semantics(
-                    label: '${perf.title} 포스터',
-                    image: true,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: perf.posterUrl != null
-                          ? CachedNetworkImage(
-                              imageUrl: perf.posterUrl!,
-                              width: 70,
-                              height: 90,
-                              fit: BoxFit.cover,
-                              placeholder: (_, __) => _PosterPlaceholder(category: perf.category),
-                              errorWidget: (_, __, ___) => _PosterPlaceholder(category: perf.category),
-                            )
-                          : _PosterPlaceholder(category: perf.category),
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  // Info
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          perf.title,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.all(10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── Main content row ──────────────────────────────
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Poster
+                    _PosterImage(perf: perf),
+                    const SizedBox(width: 12),
+                    // Info column
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Tag row
+                          Wrap(
+                            spacing: 5,
+                            runSpacing: 4,
+                            children: [
+                              _TagPill(label: genreLabel, bg: const Color(0xFF185FA5)),
+                              _TagPill(label: perf.region, bg: const Color(0xFF4A5568)),
+                              _StatusTag(status: status),
+                              if (perf.isFree)
+                                _TagPill(label: '무료', bg: const Color(0xFF2E7D32)),
+                            ],
                           ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 5),
-                        Row(
-                          children: [
-                            const Icon(Icons.place_outlined, size: 13, color: AppColors.textSecondary),
-                            const SizedBox(width: 2),
-                            Expanded(
-                              child: Text(
-                                '${perf.venue} · ${perf.region}',
-                                style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                          const SizedBox(height: 7),
+                          // Title
+                          Text(
+                            _htmlDecode(perf.title),
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
+                              height: 1.4,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 8),
+                          // Meta rows
+                          _IconMetaRow(
+                            icon: Icons.location_on_outlined,
+                            text: perf.venue,
+                          ),
+                          if (perf.performanceAt != null) ...[
+                            _IconMetaRow(
+                              icon: Icons.calendar_today_outlined,
+                              text: _formatDate(perf.performanceAt!),
+                              bold: false,
+                            ),
+                            _IconMetaRow(
+                              icon: Icons.access_time_outlined,
+                              text: _formatTime(perf.performanceAt!),
                             ),
                           ],
-                        ),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 5,
-                          runSpacing: 5,
-                          children: [
-                            if (perf.isHot) const BadgeWidget(type: BadgeType.hot),
-                            if (perf.isFree) const BadgeWidget(type: BadgeType.free),
-                            if (perf.isNational) const BadgeWidget(type: BadgeType.national),
-                          ],
-                        ),
-                      ],
+                          _PriceRow(perf: perf),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
+                // ── Divider ───────────────────────────────────────
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: Divider(height: 1, thickness: 0.5),
+                ),
+                // ── Bottom bar ────────────────────────────────────
+                Row(
+                  children: [
+                    const Icon(Icons.access_time_rounded, size: 13, color: AppColors.textSecondary),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: CountdownTimer(
+                        openAt: perf.ticketOpenAt,
+                        bookingUrl: perf.bookingUrl,
+                        showBookButton: false,
+                      ),
+                    ),
+                    AlarmButton(perf: perf),
+                  ],
+                ),
+              ],
             ),
-            // Bottom bar
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: isUrgent ? AppColors.urgentBg : AppColors.background,
-                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.access_time_rounded, size: 14, color: AppColors.textSecondary),
-                  const SizedBox(width: 5),
-                  CountdownTimer(
-                    openAt: perf.ticketOpenAt,
-                    bookingUrl: perf.bookingUrl,
-                    onBook: () => _handleBook(context, perf.bookingUrl),
-                  ),
-                  const Spacer(),
-                  _AlarmButton(perf: perf),
-                ],
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Future<void> _handleBook(BuildContext context, String? url) async {
-    if (url == null || url.isEmpty) return;
+  static String _formatDate(DateTime dt) {
+    const weekdays = ['월', '화', '수', '목', '금', '토', '일'];
+    final local = dt.toLocal();
+    final wd = weekdays[local.weekday - 1];
+    return '${local.year}.${local.month.toString().padLeft(2, '0')}.${local.day.toString().padLeft(2, '0')} ($wd)';
+  }
 
-    if (!isAllowedBookingUrl(url)) {
-      if (!context.mounted) return;
-      await showDialog(
-        context: context,
-        builder: (_) => AlertDialog(
-          title: const Text('지원하지 않는 사이트'),
-          content: const Text('이 예매 사이트는 검증된 목록에 없습니다.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('확인'),
-            ),
-          ],
-        ),
-      );
-      return;
-    }
-
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
+  static String _formatTime(DateTime dt) {
+    final local = dt.toLocal();
+    return '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
   }
 }
 
-class _AlarmButton extends ConsumerWidget {
+// ── Tag pill ──────────────────────────────────────────────────────
+class _TagPill extends StatelessWidget {
+  final String label;
+  final Color bg;
+  const _TagPill({required this.label, required this.bg});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(100)),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontSize: 11, fontWeight: FontWeight.w600, color: Colors.white, letterSpacing: 0.2,
+        ),
+      ),
+    );
+  }
+}
+
+// ── Status tag ────────────────────────────────────────────────────
+class _StatusTag extends StatelessWidget {
+  final _TicketStatus status;
+  const _StatusTag({required this.status});
+
+  @override
+  Widget build(BuildContext context) {
+    final Color bg;
+    final String label;
+    switch (status) {
+      case _TicketStatus.open:
+        bg = const Color(0xFFD32F2F);
+        label = '오픈중';
+      case _TicketStatus.soonOpen:
+        bg = const Color(0xFFF57C00);
+        label = '예매대기';
+      case _TicketStatus.upcoming:
+        bg = const Color(0xFF90A4AE);
+        label = '공연예정';
+    }
+    return _TagPill(label: label, bg: bg);
+  }
+}
+
+// ── Icon + text meta row ──────────────────────────────────────────
+class _IconMetaRow extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  final bool bold;
+  const _IconMetaRow({required this.icon, required this.text, this.bold = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 3),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 1),
+            child: Icon(icon, size: 13, color: AppColors.textSecondary),
+          ),
+          const SizedBox(width: 4),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: bold ? 14 : 13,
+                fontWeight: bold ? FontWeight.w700 : FontWeight.w400,
+                color: AppColors.textSecondary,
+                height: 1.4,
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Price row ─────────────────────────────────────────────────────
+class _PriceRow extends StatelessWidget {
   final Performance perf;
-  const _AlarmButton({required this.perf});
+  const _PriceRow({required this.perf});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final alarmMinutes = ref.watch(alarmProvider(perf.id));
-    final hasAlarm = alarmMinutes != null;
+  Widget build(BuildContext context) {
+    final String priceText;
+    final Color priceColor;
 
-    return Semantics(
-      label: hasAlarm ? '알림 설정됨 버튼' : '알림 설정 버튼',
-      button: true,
-      child: GestureDetector(
-        onTap: () => hasAlarm
-            ? _cancelAlarm(context, ref)
-            : _showAlarmDialog(context, ref),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: hasAlarm ? AppColors.accent : Colors.transparent,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: hasAlarm ? AppColors.accent : AppColors.divider),
+    if (perf.isFree) {
+      priceText = '무료';
+      priceColor = const Color(0xFF1565C0);
+    } else if (perf.priceInfo != null && perf.priceInfo!.isNotEmpty) {
+      // Summarize: show first price range
+      final raw = perf.priceInfo!.replaceAll(RegExp(r'\s+'), ' ').trim();
+      priceText = raw.length > 24 ? '${raw.substring(0, 24)}…' : raw;
+      priceColor = const Color(0xFF8B1A1A);
+    } else {
+      priceText = '유료';
+      priceColor = const Color(0xFF8B1A1A);
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 3),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 1),
+            child: Icon(Icons.money_outlined, size: 13, color: priceColor),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                hasAlarm ? Icons.notifications_active_rounded : Icons.notifications_outlined,
-                size: 14,
-                color: hasAlarm ? Colors.white : AppColors.textSecondary,
+          const SizedBox(width: 4),
+          Expanded(
+            child: Text(
+              priceText,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: priceColor,
               ),
-              const SizedBox(width: 4),
-              Text(
-                hasAlarm ? '알림 ON' : '알림',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: hasAlarm ? Colors.white : AppColors.textSecondary,
-                ),
-              ),
-            ],
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
-        ),
+        ],
       ),
-    );
-  }
-
-  Future<void> _showAlarmDialog(BuildContext context, WidgetRef ref) async {
-    final options = [
-      (10, '10분 전'),
-      (60, '1시간 전'),
-      (1440, '24시간 전'),
-    ];
-
-    final selected = await showModalBottomSheet<int>(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppColors.divider,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                '알림 시간 선택',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 16),
-              ...options.map((opt) => ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.alarm_rounded, color: AppColors.accent),
-                    title: Text(opt.$2,
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-                    onTap: () => Navigator.pop(ctx, opt.$1),
-                    minLeadingWidth: 32,
-                    minTileHeight: 48,
-                  )),
-            ],
-          ),
-        ),
-      ),
-    );
-
-    if (selected == null) return;
-    if (!context.mounted) return;
-
-    final api = ref.read(apiServiceProvider);
-    await ref.read(alarmProvider(perf.id).notifier).setAlarm(perf, selected, api);
-
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('알림이 설정되었습니다.')),
-    );
-  }
-
-  Future<void> _cancelAlarm(BuildContext context, WidgetRef ref) async {
-    await ref.read(alarmProvider(perf.id).notifier).cancel(perf.id);
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('알림이 취소되었습니다.')),
     );
   }
 }
 
-class _PosterPlaceholder extends StatefulWidget {
-  final String category;
-  const _PosterPlaceholder({required this.category});
+// ── Poster image ──────────────────────────────────────────────────
+class _PosterImage extends StatefulWidget {
+  final Performance perf;
+  const _PosterImage({required this.perf});
 
   @override
-  State<_PosterPlaceholder> createState() => _PosterPlaceholderState();
+  State<_PosterImage> createState() => _PosterImageState();
 }
 
-class _PosterPlaceholderState extends State<_PosterPlaceholder> {
+class _PosterImageState extends State<_PosterImage> {
   late final String _iconPath;
 
   @override
   void initState() {
     super.initState();
-    _iconPath = GenreIconProvider.instance.nextIcon(widget.category);
+    _iconPath = GenreIconProvider.instance.nextIcon(widget.perf.category);
   }
 
   @override
   Widget build(BuildContext context) {
-    final isGugak = widget.category == 'gugak';
+    final isGugak = widget.perf.category == 'gugak';
     final bgColor = isGugak ? AppColors.gugakBg : AppColors.classicBg;
     final fallbackColor = isGugak ? AppColors.gugakText : AppColors.classicText;
     final fallbackIcon = isGugak ? Icons.music_note_rounded : Icons.piano_rounded;
 
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: widget.perf.posterUrl != null
+          ? CachedNetworkImage(
+              imageUrl: widget.perf.posterUrl!,
+              width: 80,
+              height: 120,
+              fit: BoxFit.cover,
+              placeholder: (_, __) => _placeholder(bgColor, fallbackIcon, fallbackColor),
+              errorWidget: (_, __, ___) => _placeholder(bgColor, fallbackIcon, fallbackColor),
+            )
+          : _placeholder(bgColor, fallbackIcon, fallbackColor),
+    );
+  }
+
+  Widget _placeholder(Color bg, IconData icon, Color iconColor) {
     return Container(
-      width: 70,
-      height: 90,
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(10),
-      ),
+      width: 80,
+      height: 120,
+      color: bg,
       child: Center(
         child: Image(
           image: AssetImage(_iconPath),
-          width: 48,
-          height: 48,
+          width: 44,
+          height: 44,
           fit: BoxFit.contain,
-          errorBuilder: (_, __, ___) => Icon(
-            fallbackIcon,
-            color: fallbackColor,
-            size: 28,
-          ),
+          errorBuilder: (_, __, ___) => Icon(icon, color: iconColor, size: 28),
         ),
       ),
     );

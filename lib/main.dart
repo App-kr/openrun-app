@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -13,7 +13,7 @@ import 'shared/services/notification_service.dart';
 
 const String backendUrl = String.fromEnvironment(
   'BACKEND_URL',
-  defaultValue: 'https://bridge-jobs-api.onrender.com',
+  defaultValue: 'https://openrun-api.onrender.com',
 );
 
 Future<void> main() async {
@@ -38,6 +38,16 @@ Future<void> main() async {
     // Firebase not configured for this platform — continue without notifications
   }
 
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    debugPrint("FLUTTER_ERROR: ${details.exceptionAsString()}");
+    debugPrint(details.stack.toString());
+  };
+  PlatformDispatcher.instance.onError = (error, stack) {
+    debugPrint("PLATFORM_ERROR: $error");
+    debugPrint(stack.toString());
+    return true;
+  };
   runApp(const ProviderScope(child: OpenRunApp()));
 }
 

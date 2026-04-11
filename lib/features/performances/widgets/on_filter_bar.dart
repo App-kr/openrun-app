@@ -4,15 +4,19 @@ import '../../../core/theme.dart';
 class OnFilterBar extends StatelessWidget {
   final String selectedCategory;
   final String selectedRegion;
+  final String selectedStatus;
   final ValueChanged<String> onCategoryChanged;
   final ValueChanged<String> onRegionChanged;
+  final ValueChanged<String> onStatusChanged;
 
   const OnFilterBar({
     super.key,
     required this.selectedCategory,
     required this.selectedRegion,
+    required this.selectedStatus,
     required this.onCategoryChanged,
     required this.onRegionChanged,
+    required this.onStatusChanged,
   });
 
   static const _categories = [
@@ -29,6 +33,15 @@ class OnFilterBar extends StatelessWidget {
     ('인천', '인천'),
     ('광주', '광주'),
     ('대전', '대전'),
+    ('경남', '경남'),
+    ('경기', '경기'),
+  ];
+
+  static const _statuses = [
+    ('all', '전체'),
+    ('open', '오픈중'),
+    ('soon', '예매대기'),
+    ('upcoming', '공연예정'),
   ];
 
   @override
@@ -44,11 +57,22 @@ class OnFilterBar extends StatelessWidget {
             selected: selectedCategory,
             onSelected: onCategoryChanged,
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 5),
           _FilterRow(
             items: _regions,
             selected: selectedRegion,
             onSelected: onRegionChanged,
+          ),
+          const SizedBox(height: 5),
+          _FilterRow(
+            items: _statuses,
+            selected: selectedStatus,
+            onSelected: onStatusChanged,
+            activeColors: const {
+              'open': Color(0xFFD32F2F),
+              'soon': Color(0xFFF57C00),
+              'upcoming': Color(0xFF90A4AE),
+            },
           ),
         ],
       ),
@@ -60,8 +84,14 @@ class _FilterRow extends StatelessWidget {
   final List<(String, String)> items;
   final String selected;
   final ValueChanged<String> onSelected;
+  final Map<String, Color>? activeColors;
 
-  const _FilterRow({required this.items, required this.selected, required this.onSelected});
+  const _FilterRow({
+    required this.items,
+    required this.selected,
+    required this.onSelected,
+    this.activeColors,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -72,6 +102,7 @@ class _FilterRow extends StatelessWidget {
         children: items.map((item) {
           final (value, label) = item;
           final isSelected = selected == value;
+          final activeColor = activeColors?[value] ?? AppColors.accent;
           return Padding(
             padding: const EdgeInsets.only(right: 8),
             child: GestureDetector(
@@ -80,10 +111,10 @@ class _FilterRow extends StatelessWidget {
                 duration: const Duration(milliseconds: 150),
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                 decoration: BoxDecoration(
-                  color: isSelected ? AppColors.accent : AppColors.background,
+                  color: isSelected ? activeColor : AppColors.background,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: isSelected ? AppColors.accent : AppColors.divider,
+                    color: isSelected ? activeColor : AppColors.divider,
                   ),
                 ),
                 child: Text(

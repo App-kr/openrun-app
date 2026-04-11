@@ -136,4 +136,14 @@ class ApiService {
       'minutes_before': minutesBefore,
     });
   }
+
+  Future<List<Map<String, dynamic>>> fetchAds() async {
+    try {
+      final resp = await _dio.get('/api/ads');
+      final rawList = resp.data['ads'] as List? ?? [];
+      return rawList.cast<Map<String, dynamic>>();
+    } catch (_) {
+      return [];
+    }
+  }
 }

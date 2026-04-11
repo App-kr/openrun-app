@@ -14,12 +14,18 @@ class Performance with _$Performance {
     required String region,
     required String category,
     required DateTime ticketOpenAt,
+    DateTime? performanceAt,
     String? posterUrl,
     String? bookingUrl,
     @Default(false) bool isHot,
     @Default(false) bool isFree,
     @Default(false) bool isNational,
     @Default(false) bool hasAlarm,
+    // Detail fields
+    String? priceInfo,
+    String? runningTime,
+    String? ageLimit,
+    String? programInfo,
   }) = _Performance;
 
   factory Performance.fromJson(Map<String, dynamic> json) => _$PerformanceFromJson(json);

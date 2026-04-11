@@ -80,8 +80,8 @@ class AlarmService {
 
     await _plugin.zonedSchedule(
       _idFrom(perf.id, 'scheduled'),
-      isUrgent ? '🔥 ${minutesBefore}분 후 티켓 오픈!' : '🎟️ 공연 오픈 예정',
-      '${perf.title} — 지금 준비하세요',
+      isUrgent ? '🎼 ${minutesBefore}분 후 티켓 오픈!' : '🎼 관심공연이 곧 오픈합니다!',
+      '${perf.title} — 관심공연이 곧 오픈합니다!',
       notifyTime,
       NotificationDetails(
         android: AndroidNotificationDetails(
@@ -125,6 +125,18 @@ class AlarmService {
           presentSound: urgent,
         ),
       ),
+    );
+  }
+
+  Future<void> showAlarmSetConfirmation(Performance perf, int minutesBefore) async {
+    final label = minutesBefore >= 1440
+        ? '24시간 전'
+        : minutesBefore >= 60
+            ? '${minutesBefore ~/ 60}시간 전'
+            : '$minutesBefore분 전';
+    await showImmediateNotification(
+      '🎼 알림 설정 완료',
+      '${perf.title} — $label 알림이 설정되었습니다',
     );
   }
 

@@ -7,6 +7,7 @@ import '../features/onboarding/splash_screen.dart';
 import '../features/onboarding/genre_select_screen.dart';
 import '../features/onboarding/city_select_screen.dart';
 import '../features/performances/performance_list_screen.dart';
+import '../features/performances/performance_detail_screen.dart';
 import '../features/alarms/alarm_list_screen.dart';
 import '../features/settings/settings_screen.dart';
 
@@ -33,6 +34,13 @@ GoRouter router(RouterRef ref) {
           GoRoute(path: '/alarms', builder: (_, __) => const AlarmListScreen()),
           GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),
         ],
+      ),
+      GoRoute(
+        path: '/performances/:id',
+        builder: (_, state) {
+          final perf = state.extra as dynamic;
+          return PerformanceDetailScreen(perf: perf);
+        },
       ),
     ],
   );

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../core/theme.dart';
 
 enum BadgeType { hot, free, national }
 
@@ -11,9 +10,21 @@ class BadgeWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final config = switch (type) {
-      BadgeType.hot => (label: 'HOT', bg: AppColors.hot.withOpacity(0.1), fg: AppColors.hot),
-      BadgeType.free => (label: '수수료 0원', bg: AppColors.free.withOpacity(0.1), fg: AppColors.free),
-      BadgeType.national => (label: '국립', bg: AppColors.national.withOpacity(0.1), fg: AppColors.national),
+      BadgeType.hot => (
+          label: 'HOT',
+          bg: const Color(0xFFDC2626),
+          fg: Colors.white,
+        ),
+      BadgeType.free => (
+          label: '무료 Free',
+          bg: const Color(0xFF16A34A),
+          fg: Colors.white,
+        ),
+      BadgeType.national => (
+          label: '국립',
+          bg: const Color(0xFF1D4ED8),
+          fg: Colors.white,
+        ),
     };
 
     return Container(

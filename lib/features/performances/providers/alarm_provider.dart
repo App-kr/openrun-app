@@ -40,8 +40,9 @@ class Alarm extends _$Alarm {
       jsonEncode({'minutes_before': minutesBefore}),
     );
 
-    // Schedule local notification
+    // Schedule local notification + immediate confirmation
     await AlarmService.instance.scheduleAlarm(perf, minutesBefore: minutesBefore);
+    await AlarmService.instance.showAlarmSetConfirmation(perf, minutesBefore);
 
     // POST to backend
     final token = await NotificationService.instance.getStoredToken();

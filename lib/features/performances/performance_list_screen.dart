@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shimmer/shimmer.dart';
@@ -7,6 +7,9 @@ import '../../shared/services/api_service.dart';
 import '../../shared/widgets/error_widget.dart';
 import 'providers/performances_provider.dart';
 import 'widgets/on_filter_bar.dart';
+import 'package:go_router/go_router.dart';
+import '../../shared/widgets/session_status_widget.dart';
+import 'widgets/ad_banner_card.dart';
 import 'widgets/perf_card.dart';
 
 class PerformanceListScreen extends ConsumerStatefulWidget {
@@ -19,6 +22,35 @@ class PerformanceListScreen extends ConsumerStatefulWidget {
 class _PerformanceListScreenState extends ConsumerState<PerformanceListScreen> {
   String _category = 'all';
   String _region = 'all';
+  String _status = 'all';
+  List<Map<String, dynamic>> _ads = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAds();
+  }
+
+  Future<void> _loadAds() async {
+    final api = ref.read(apiServiceProvider);
+    final ads = await api.fetchAds();
+    if (mounted) setState(() => _ads = ads);
+  }
+
+  List<dynamic> _filterByStatus(List<dynamic> perfs) {
+    if (_status == 'all') return perfs;
+    final now = DateTime.now();
+    return perfs.where((p) {
+      final openAt = p.ticketOpenAt;
+      if (_status == 'open') return openAt.isBefore(now);
+      if (_status == 'soon') {
+        final diff = openAt.difference(now);
+        return !openAt.isBefore(now) && diff.inDays < 7;
+      }
+      // upcoming
+      return openAt.difference(now).inDays >= 7;
+    }).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,6 +68,18 @@ class _PerformanceListScreenState extends ConsumerState<PerformanceListScreen> {
         ),
         actions: [
           Semantics(
+            label: '알림 설정',
+            button: true,
+            child: IconButton(
+              icon: const Icon(Icons.notifications_outlined),
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('알림 설정 준비 중')),
+                );
+              },
+            ),
+          ),
+          Semantics(
             label: '새로고침',
             button: true,
             child: IconButton(
@@ -45,16 +89,20 @@ class _PerformanceListScreenState extends ConsumerState<PerformanceListScreen> {
           ),
         ],
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(80),
+          preferredSize: const Size.fromHeight(118),
           child: OnFilterBar(
             selectedCategory: _category,
             selectedRegion: _region,
+            selectedStatus: _status,
             onCategoryChanged: (v) => setState(() => _category = v),
             onRegionChanged: (v) => setState(() => _region = v),
+            onStatusChanged: (v) => setState(() => _status = v),
           ),
         ),
       ),
-      body: perfsAsync.when(
+      body: Stack(
+        children: [
+          perfsAsync.when(
         loading: () => _WakingLoadingList(
           onServerAwake: () => ref.invalidate(performancesProvider),
           api: ref.read(apiServiceProvider),
@@ -65,7 +113,7 @@ class _PerformanceListScreenState extends ConsumerState<PerformanceListScreen> {
           maxRetries: 3,
         ),
         data: (result) {
-          final perfs = result.$1;
+          final perfs = _filterByStatus(result.$1);
           final isFromCache = result.$2;
 
           if (perfs.isEmpty) {
@@ -121,14 +169,37 @@ class _PerformanceListScreenState extends ConsumerState<PerformanceListScreen> {
                   onRefresh: () async => ref.invalidate(performancesProvider),
                   child: ListView.builder(
                     padding: const EdgeInsets.only(top: 8, bottom: 24),
-                    itemCount: perfs.length,
-                    itemBuilder: (_, i) => PerfCard(perf: perfs[i]),
+                    itemCount: perfs.length + (_ads.isNotEmpty ? (perfs.length ~/ 10) : 0),
+                    itemBuilder: (ctx, i) {
+                      // 매 11번째 슬롯 (인덱스 10, 21, 32...) 에 광고 삽입
+                      if (_ads.isNotEmpty) {
+                        final adSlots = i ~/ 11;
+                        if (i % 11 == 10 && adSlots < _ads.length) {
+                          return AdBannerCard(ad: _ads[adSlots % _ads.length]);
+                        }
+                        final perfIdx = i - adSlots - (i % 11 > 10 ? 1 : 0);
+                        if (perfIdx >= 0 && perfIdx < perfs.length) {
+                          return PerfCard(
+                            perf: perfs[perfIdx],
+                            onTap: () => ctx.push('/performances/${perfs[perfIdx].id}', extra: perfs[perfIdx]),
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      }
+                      return PerfCard(
+                        perf: perfs[i],
+                        onTap: () => ctx.push('/performances/${perfs[i].id}', extra: perfs[i]),
+                      );
+                    },
                   ),
                 ),
               ),
             ],
           );
         },
+      ),
+          SessionStatusOverlay(api: ref.read(apiServiceProvider)),
+        ],
       ),
     );
   }
@@ -249,3 +320,4 @@ class _WakingLoadingListState extends State<_WakingLoadingList> {
     );
   }
 }
+
