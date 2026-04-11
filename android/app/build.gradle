@@ -38,9 +38,9 @@ android {
     signingConfigs {
         release {
             keyAlias keyProperties['keyAlias']
-            keyPassword keyProperties['keyPassword']
+            keyPassword System.getenv("KEYSTORE_PASS") ?: keyProperties['keyPassword']
             storeFile keyProperties['storeFile'] ? file(keyProperties['storeFile']) : null
-            storePassword keyProperties['storePassword']
+            storePassword System.getenv("KEYSTORE_PASS") ?: keyProperties['storePassword']
         }
     }
 

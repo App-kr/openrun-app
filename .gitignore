@@ -20,3 +20,6 @@ ios/Pods/
 ios/Runner.xcworkspace/xcshareddata/
 .env
 *.log
+*.jks
+nul
+android/app/src/main/resmipmap-*/
