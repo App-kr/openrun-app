@@ -126,8 +126,8 @@ class _SplashScreenState extends State<SplashScreen> {
     }
   }
 
-  void _select(String category) {
-    context.go('/city?category=$category');
+  void _goIntro() {
+    context.go('/intro');
   }
 
   @override
@@ -143,7 +143,7 @@ class _SplashScreenState extends State<SplashScreen> {
               // ── Left: Classic — dark navy ─────────────────────────
               Expanded(
                 child: GestureDetector(
-                  onTap: _autoNavigating ? null : () => _select('classic'),
+                  onTap: _autoNavigating ? null : () => _goIntro(),
                   child: Container(
                     decoration: const BoxDecoration(
                       color: Color(0xFF0D2B4E), // dark navy base
@@ -169,7 +169,7 @@ class _SplashScreenState extends State<SplashScreen> {
               // ── Right: Gugak — golden amber (태극 feel) ───────────
               Expanded(
                 child: GestureDetector(
-                  onTap: _autoNavigating ? null : () => _select('gugak'),
+                  onTap: _autoNavigating ? null : () => _goIntro(),
                   child: Container(
                     color: const Color(0xFFB8720A),
                     child: Stack(

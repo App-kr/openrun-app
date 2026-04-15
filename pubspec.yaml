@@ -1,5 +1,5 @@
-name: openrun_app
-description: 공연 티켓 오픈 알림 앱 — 국립·시립 공연장 클래식/국악 통합
+name: taekit
+description: 공연 티켓 오픈 알림 앱 — 택킷
 
 publish_to: 'none'
 version: 1.0.0+1

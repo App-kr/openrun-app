@@ -9,7 +9,7 @@ class AppLocalizationsKo extends AppLocalizations {
   AppLocalizationsKo([String locale = 'ko']) : super(locale);
 
   @override
-  String get appTitle => 'OpenRun';
+  String get appTitle => '택킷';
 
   @override
   String get appTagline => '공연 티켓 오픈 알림';
@@ -59,7 +59,7 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get openRunTitle => 'OpenRun';
+  String get openRunTitle => '택킷';
 
   @override
   String get refresh => '새로고침';

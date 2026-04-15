@@ -48,17 +48,17 @@ Future<void> main() async {
     debugPrint(stack.toString());
     return true;
   };
-  runApp(const ProviderScope(child: OpenRunApp()));
+  runApp(const ProviderScope(child: TaekitApp()));
 }
 
-class OpenRunApp extends ConsumerWidget {
-  const OpenRunApp({super.key});
+class TaekitApp extends ConsumerWidget {
+  const TaekitApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
     return MaterialApp.router(
-      title: 'OpenRun',
+      title: 'Taekit',
       theme: AppTheme.light,
       routerConfig: router,
       debugShowCheckedModeBanner: false,

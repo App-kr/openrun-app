@@ -12,7 +12,7 @@ if (keyPropertiesFile.exists()) {
 }
 
 android {
-    namespace "com.openrun.app"
+    namespace "com.taekit.app"
     compileSdk flutter.compileSdkVersion
     ndkVersion flutter.ndkVersion
 
@@ -27,7 +27,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.openrun.app"
+        applicationId "com.taekit.app"
         minSdkVersion flutter.minSdkVersion
         targetSdkVersion flutter.targetSdkVersion
         versionCode 1

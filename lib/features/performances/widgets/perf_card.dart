@@ -242,51 +242,37 @@ class _IconMetaRow extends StatelessWidget {
   }
 }
 
-// ── Price row ─────────────────────────────────────────────────────
+// ── Price badge ───────────────────────────────────────────────────
 class _PriceRow extends StatelessWidget {
   final Performance perf;
   const _PriceRow({required this.perf});
 
   @override
   Widget build(BuildContext context) {
-    final String priceText;
-    final Color priceColor;
-
-    if (perf.isFree) {
-      priceText = '무료';
-      priceColor = const Color(0xFF1565C0);
-    } else if (perf.priceInfo != null && perf.priceInfo!.isNotEmpty) {
-      // Summarize: show first price range
-      final raw = perf.priceInfo!.replaceAll(RegExp(r'\s+'), ' ').trim();
-      priceText = raw.length > 24 ? '${raw.substring(0, 24)}…' : raw;
-      priceColor = const Color(0xFF8B1A1A);
-    } else {
-      priceText = '유료';
-      priceColor = const Color(0xFF8B1A1A);
-    }
+    final bool free = perf.isFree;
+    final Color bgColor = free
+        ? const Color(0xFFE3F0FF)  // 연한 파란색
+        : const Color(0xFFFFECEC); // 연한 붉은색
+    final Color textColor = free
+        ? const Color(0xFF1565C0)
+        : const Color(0xFFB71C1C);
 
     return Padding(
-      padding: const EdgeInsets.only(top: 3),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 1),
-            child: Icon(Icons.money_outlined, size: 13, color: priceColor),
+      padding: const EdgeInsets.only(top: 5),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Text(
+          free ? '무료' : '유료',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: textColor,
           ),
-          const SizedBox(width: 4),
-          Expanded(
-            child: Text(
-              priceText,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: priceColor,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

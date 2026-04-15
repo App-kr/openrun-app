@@ -9,7 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'OpenRun';
+  String get appTitle => 'Taekit';
 
   @override
   String get appTagline => 'Performance Ticket Open Alerts';
@@ -59,7 +59,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get openRunTitle => 'OpenRun';
+  String get openRunTitle => 'Taekit';
 
   @override
   String get refresh => 'Refresh';

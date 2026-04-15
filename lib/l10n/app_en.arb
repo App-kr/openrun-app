@@ -1,6 +1,6 @@
 {
   "@@locale": "en",
-  "appTitle": "OpenRun",
+  "appTitle": "Taekit",
   "appTagline": "Performance Ticket Open Alerts",
   "appSubtitle": "National & Municipal Classic / Gugak Performances",
   "genreQuestion": "What kind of performances\ndo you enjoy?",
@@ -17,7 +17,7 @@
   "comingSoon": "Coming Soon",
   "confirmSelection": "Confirm ({count})",
   "@confirmSelection": { "placeholders": { "count": { "type": "int" } } },
-  "openRunTitle": "OpenRun",
+  "openRunTitle": "Taekit",
   "refresh": "Refresh",
   "performances": "Performances",
   "myAlarms": "My Alarms",

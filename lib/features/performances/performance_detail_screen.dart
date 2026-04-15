@@ -3,10 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme.dart';
-import '../../shared/services/api_service.dart';
 import 'models/performance.dart';
-import 'widgets/alarm_button_widget.dart';
-import 'widgets/countdown_timer.dart';
 
 // ── HTML entity decoder ────────────────────────────────────────────
 String _htmlDecode(String text) => text
@@ -117,10 +114,8 @@ class PerformanceDetailScreen extends ConsumerWidget {
             _InfoSection(perf: perf),
             const Divider(height: 1, thickness: 1, color: Color(0xFFDDDDDD)),
             _EnglishSection(perf: perf),
-            if (perf.programInfo != null && perf.programInfo!.isNotEmpty) ...[
-              const Divider(height: 1, thickness: 1, color: Color(0xFFDDDDDD)),
-              _InfoProgramSection(programInfo: perf.programInfo!),
-            ],
+            const Divider(height: 1, thickness: 1, color: Color(0xFFDDDDDD)),
+            _InfoProgramSection(programInfo: perf.programInfo),
             _BookingSection(perf: perf),
             const SizedBox(height: 32),
           ],
@@ -348,11 +343,13 @@ class _EnglishSection extends StatelessWidget {
 // INFO / Program section
 // ─────────────────────────────────────────────────────────────────────────────
 class _InfoProgramSection extends StatelessWidget {
-  final String programInfo;
+  final String? programInfo;
   const _InfoProgramSection({required this.programInfo});
 
   @override
   Widget build(BuildContext context) {
+    final hasInfo = programInfo != null && programInfo!.isNotEmpty;
+
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
@@ -368,14 +365,24 @@ class _InfoProgramSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          Text(
-            programInfo,
-            style: const TextStyle(
-              fontSize: 16,
-              color: Color(0xFF111111),
-              height: 1.6,
+          if (hasInfo)
+            Text(
+              programInfo!,
+              style: const TextStyle(
+                fontSize: 16,
+                color: Color(0xFF111111),
+                height: 1.6,
+              ),
+            )
+          else
+            const Text(
+              '프로그램 정보를 준비 중입니다.\n예매 페이지에서 상세 내용을 확인하세요.',
+              style: TextStyle(
+                fontSize: 15,
+                color: Color(0xFF999999),
+                height: 1.7,
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -441,14 +448,15 @@ class _BookingSection extends StatelessWidget {
   Future<void> _launch(BuildContext context, String url) async {
     if (url.isEmpty) return;
     final uri = Uri.tryParse(url);
-    if (uri == null) return;
-    if (!isAllowedBookingUrl(url)) return;
-    if (await canLaunchUrl(uri)) {
+    if (uri == null || !uri.hasScheme) return;
+    try {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('예매 페이지를 열 수 없습니다.')),
-      );
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('예매 페이지를 열 수 없습니다.')),
+        );
+      }
     }
   }
 }

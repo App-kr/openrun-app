@@ -101,7 +101,7 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
-  /// **'OpenRun'**
+  /// **'Taekit'**
   String get appTitle;
 
   /// No description provided for @appTagline.
@@ -197,7 +197,7 @@ abstract class AppLocalizations {
   /// No description provided for @openRunTitle.
   ///
   /// In en, this message translates to:
-  /// **'OpenRun'**
+  /// **'Taekit'**
   String get openRunTitle;
 
   /// No description provided for @refresh.

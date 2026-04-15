@@ -62,9 +62,9 @@ class _PerformanceListScreenState extends ConsumerState<PerformanceListScreen> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Semantics(
-          label: 'OpenRun 앱',
+          label: '택킷 앱',
           header: true,
-          child: const Text('OpenRun'),
+          child: const Text('택킷'),
         ),
         actions: [
           Semantics(

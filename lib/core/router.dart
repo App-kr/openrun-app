@@ -4,8 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../features/onboarding/splash_screen.dart';
-import '../features/onboarding/genre_select_screen.dart';
-import '../features/onboarding/city_select_screen.dart';
+import '../features/onboarding/intro_screen.dart';
 import '../features/performances/performance_list_screen.dart';
 import '../features/performances/performance_detail_screen.dart';
 import '../features/alarms/alarm_list_screen.dart';
@@ -19,14 +18,7 @@ GoRouter router(RouterRef ref) {
     initialLocation: '/splash',
     routes: [
       GoRoute(path: '/splash', builder: (_, __) => const SplashScreen()),
-      GoRoute(path: '/genre', builder: (_, __) => const GenreSelectScreen()),
-      GoRoute(
-        path: '/city',
-        builder: (_, state) {
-          final category = state.uri.queryParameters['category'] ?? 'all';
-          return CitySelectScreen(category: category);
-        },
-      ),
+      GoRoute(path: '/intro', builder: (_, __) => const IntroScreen()),
       ShellRoute(
         builder: (context, state, child) => MainShell(child: child),
         routes: [

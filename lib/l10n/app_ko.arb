@@ -1,6 +1,6 @@
 {
   "@@locale": "ko",
-  "appTitle": "OpenRun",
+  "appTitle": "택킷",
   "appTagline": "공연 티켓 오픈 알림",
   "appSubtitle": "국립·시립 클래식 & 국악 공연",
   "genreQuestion": "어떤 공연을\n좋아하세요?",
@@ -17,7 +17,7 @@
   "comingSoon": "준비 중 (SOON)",
   "confirmSelection": "선택 완료 ({count}곳)",
   "@confirmSelection": { "placeholders": { "count": { "type": "int" } } },
-  "openRunTitle": "OpenRun",
+  "openRunTitle": "택킷",
   "refresh": "새로고침",
   "performances": "공연",
   "myAlarms": "내 알림",
