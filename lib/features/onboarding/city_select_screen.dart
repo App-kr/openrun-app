@@ -118,7 +118,7 @@ class _CitySelectScreenState extends State<CitySelectScreen> {
                   decoration: BoxDecoration(
                     color: const Color(0xFFDCFCE7),
                     borderRadius: BorderRadius.circular(100),
-                    border: Border.all(color: const Color(0xFF16A34A).withOpacity(0.3)),
+                    border: Border.all(color: const Color(0xFF16A34A).withValues(alpha: 0.3)),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -215,7 +215,7 @@ class _CitySelectScreenState extends State<CitySelectScreen> {
               color: AppColors.white,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.06),
+                  color: Colors.black.withValues(alpha: 0.06),
                   blurRadius: 12,
                   offset: const Offset(0, -4),
                 ),
@@ -278,7 +278,7 @@ class _CityChip extends StatelessWidget {
             width: selected ? 2.0 : 1.0,
           ),
           boxShadow: selected
-              ? [BoxShadow(color: const Color(0xFF185FA5).withOpacity(0.12), blurRadius: 8, offset: const Offset(0, 2))]
+              ? [BoxShadow(color: const Color(0xFF185FA5).withValues(alpha: 0.12), blurRadius: 8, offset: const Offset(0, 2))]
               : null,
         ),
         padding: const EdgeInsets.all(14),
@@ -319,7 +319,7 @@ class _CityChip extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: AppColors.textSecondary.withOpacity(0.12),
+                    color: AppColors.textSecondary.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: const Text(

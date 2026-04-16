@@ -64,7 +64,7 @@ class _GayageumPainter extends CustomPainter {
 
     // 6개 현 (가로선)
     final stringPaint = Paint()
-      ..color = color.withOpacity(0.7)
+      ..color = color.withValues(alpha: 0.7)
       ..strokeWidth = 1.2;
 
     for (int i = 0; i < 6; i++) {
@@ -78,7 +78,7 @@ class _GayageumPainter extends CustomPainter {
 
     // 안족 (중간 삼각형 지지대들)
     final anjokPaint = Paint()
-      ..color = color.withOpacity(0.5)
+      ..color = color.withValues(alpha: 0.5)
       ..style = PaintingStyle.fill;
 
     for (int i = 0; i < 6; i++) {
@@ -160,7 +160,7 @@ class _SplashScreenState extends State<SplashScreen> {
                       headline: '클래식 공연\n일정 찾기',
                       subheadline: 'CLASSIC MUSIC',
                       textColor: Colors.white,
-                      pillColor: Colors.white.withOpacity(0.18),
+                      pillColor: Colors.white.withValues(alpha: 0.18),
                     ),
                   ),
                 ),
@@ -192,7 +192,7 @@ class _SplashScreenState extends State<SplashScreen> {
                           headline: '국악 공연\n찾기',
                           subheadline: 'TRADITIONAL KOREAN MUSIC',
                           textColor: Colors.white,
-                          pillColor: Colors.white.withOpacity(0.18),
+                          pillColor: Colors.white.withValues(alpha: 0.18),
                         ),
                       ],
                     ),
@@ -214,7 +214,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black.withOpacity(0.35),
+                    Colors.black.withValues(alpha: 0.35),
                     Colors.transparent,
                   ],
                 ),
@@ -245,7 +245,7 @@ class _SplashScreenState extends State<SplashScreen> {
               alignment: Alignment.center,
               child: Container(
                 width: 1.5,
-                color: Colors.white.withOpacity(0.3),
+                color: Colors.white.withValues(alpha: 0.3),
               ),
             ),
           ),
@@ -341,7 +341,7 @@ class _HalfPanel extends StatelessWidget {
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w500,
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withValues(alpha: 0.9),
               letterSpacing: 1.2,
               shadows: const [Shadow(color: Colors.black38, blurRadius: 3)],
             ),
@@ -355,7 +355,7 @@ class _HalfPanel extends StatelessWidget {
             decoration: BoxDecoration(
               color: pillColor,
               borderRadius: BorderRadius.circular(100),
-              border: Border.all(color: Colors.white.withOpacity(0.4)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
             ),
             child: const Text(
               '공연 보기 →',

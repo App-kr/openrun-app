@@ -100,7 +100,7 @@ class _GenreCard extends StatelessWidget {
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: textColor)),
                 const SizedBox(height: 4),
                 Text(subtitle,
-                    style: TextStyle(fontSize: 14, color: textColor.withOpacity(0.7))),
+                    style: TextStyle(fontSize: 14, color: textColor.withValues(alpha: 0.7))),
               ],
             ),
             const Spacer(),
