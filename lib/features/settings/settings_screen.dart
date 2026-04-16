@@ -34,6 +34,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _showPrivacyPolicy(BuildContext context) async {
     final html = await rootBundle.loadString('assets/privacy_policy.html');
     if (!mounted) return;
+    // ignore: use_build_context_synchronously
     showDialog(
       context: context,
       builder: (_) => Dialog(
@@ -116,6 +117,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     final prefs = await SharedPreferences.getInstance();
                     await prefs.remove('onboarding_complete');
                     if (!mounted) return;
+                    // ignore: use_build_context_synchronously
                     context.go('/genre');
                   },
                 ),
