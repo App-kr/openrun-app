@@ -86,7 +86,7 @@ class _AppErrorWidgetState extends State<AppErrorWidget> {
             if (canRetry && _retriesLeft > 0) ...[
               const SizedBox(height: 24),
               Text(
-                '$_countdown초 후 자동 재시도 (${_retriesLeft}회 남음)',
+                '$_countdown초 후 자동 재시도 ($_retriesLeft회 남음)',
                 style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
               ),
               const SizedBox(height: 12),

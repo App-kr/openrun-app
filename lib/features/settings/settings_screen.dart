@@ -34,7 +34,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _showPrivacyPolicy(BuildContext context) async {
     final html = await rootBundle.loadString('assets/privacy_policy.html');
     if (!mounted) return;
-    // ignore: use_build_context_synchronously
+    if (!context.mounted) return;
     showDialog(
       context: context,
       builder: (_) => Dialog(
@@ -89,7 +89,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ? ListView(
               padding: const EdgeInsets.all(20),
               children: [
-                _SectionHeader('관심 설정'),
+                const _SectionHeader('관심 설정'),
                 _SettingsTile(
                   icon: Icons.music_note_rounded,
                   title: '장르',
@@ -103,7 +103,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onTap: () => context.go('/city?category=$_category'),
                 ),
                 const SizedBox(height: 24),
-                _SectionHeader('앱 정보'),
+                const _SectionHeader('앱 정보'),
                 const _SettingsTile(
                   icon: Icons.info_outline_rounded,
                   title: '버전',
@@ -122,7 +122,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   },
                 ),
                 const SizedBox(height: 24),
-                _SectionHeader('법적 정보'),
+                const _SectionHeader('법적 정보'),
                 const _SettingsTile(
                   icon: Icons.copyright_rounded,
                   title: '개발자',

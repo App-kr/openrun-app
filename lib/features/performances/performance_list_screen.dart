@@ -220,19 +220,23 @@ class _WakingLoadingList extends StatefulWidget {
 
 class _WakingLoadingListState extends State<_WakingLoadingList> {
   bool _showWakeBanner = false;
+  bool _failed = false;
   int _pingAttempt = 0;
-  static const _maxPings = 3;
+  int _elapsedSeconds = 0;
+  static const _maxPings = 7; // 5s + 8s*6 ≈ 60s
   Timer? _bannerTimer;
   Timer? _pingTimer;
+  Timer? _elapsedTimer;
 
   @override
   void initState() {
     super.initState();
-    // Show banner after 5s
-    _bannerTimer = Timer(const Duration(seconds: 5), () {
+    _bannerTimer = Timer(const Duration(seconds: 2), () {
       if (mounted) setState(() => _showWakeBanner = true);
     });
-    // Start pinging
+    _elapsedTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() => _elapsedSeconds++);
+    });
     _schedulePing();
   }
 
@@ -248,19 +252,30 @@ class _WakingLoadingListState extends State<_WakingLoadingList> {
     final ok = await widget.api.pingHealth();
     if (!mounted) return;
     if (ok) {
-      // Server awake — refresh provider to trigger actual data load
       widget.onServerAwake();
       return;
     }
     if (_pingAttempt < _maxPings) {
-      _pingTimer = Timer(const Duration(seconds: 10), _doPing);
+      _pingTimer = Timer(const Duration(seconds: 8), _doPing);
+    } else {
+      setState(() => _failed = true);
     }
+  }
+
+  void _retry() {
+    setState(() {
+      _failed = false;
+      _pingAttempt = 0;
+      _elapsedSeconds = 0;
+    });
+    _schedulePing();
   }
 
   @override
   void dispose() {
     _bannerTimer?.cancel();
     _pingTimer?.cancel();
+    _elapsedTimer?.cancel();
     super.dispose();
   }
 
@@ -272,28 +287,56 @@ class _WakingLoadingListState extends State<_WakingLoadingList> {
           Material(
             color: AppColors.classicBg,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              child: Row(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(
-                    width: 14,
-                    height: 14,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppColors.accent,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      '서버 연결 중... (${_pingAttempt}/$_maxPings)',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: AppColors.classicText,
-                        fontWeight: FontWeight.w500,
+                  Row(
+                    children: [
+                      if (!_failed)
+                        const SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.accent,
+                          ),
+                        ),
+                      if (!_failed) const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          _failed
+                              ? '서버 연결에 실패했습니다.'
+                              : '공연 정보를 불러오는 중입니다\n최초 실행 시 30초 소요될 수 있습니다',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: AppColors.classicText,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                       ),
-                    ),
+                      if (_failed)
+                        TextButton(
+                          onPressed: _retry,
+                          child: const Text('재시도',
+                              style: TextStyle(color: AppColors.accent, fontWeight: FontWeight.w700)),
+                        ),
+                    ],
                   ),
+                  if (!_failed) ...[
+                    const SizedBox(height: 8),
+                    LinearProgressIndicator(
+                      value: null,
+                      color: AppColors.accent,
+                      backgroundColor: AppColors.divider,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '$_elapsedSeconds초 경과',
+                      style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                    ),
+                  ],
                 ],
               ),
             ),

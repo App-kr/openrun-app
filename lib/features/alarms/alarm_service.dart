@@ -80,7 +80,7 @@ class AlarmService {
 
     await _plugin.zonedSchedule(
       _idFrom(perf.id, 'scheduled'),
-      isUrgent ? '🎼 ${minutesBefore}분 후 티켓 오픈!' : '🎼 관심공연이 곧 오픈합니다!',
+      isUrgent ? '🎼 $minutesBefore분 후 티켓 오픈!' : '🎼 관심공연이 곧 오픈합니다!',
       '${perf.title} — 관심공연이 곧 오픈합니다!',
       notifyTime,
       NotificationDetails(

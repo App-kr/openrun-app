@@ -120,9 +120,9 @@ class _CitySelectScreenState extends State<CitySelectScreen> {
                     borderRadius: BorderRadius.circular(100),
                     border: Border.all(color: const Color(0xFF16A34A).withValues(alpha: 0.3)),
                   ),
-                  child: Row(
+                  child: const Row(
                     mainAxisSize: MainAxisSize.min,
-                    children: const [
+                    children: [
                       Icon(Icons.circle, size: 6, color: Color(0xFF16A34A)),
                       SizedBox(width: 5),
                       Text(

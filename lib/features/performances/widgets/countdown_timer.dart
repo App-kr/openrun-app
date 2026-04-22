@@ -94,7 +94,7 @@ class _CountdownTimerState extends State<CountdownTimer> {
     } else if (_remaining.inHours >= 1) {
       final h = _remaining.inHours;
       final m = _remaining.inMinutes % 60;
-      label = '$h시간 ${m}분 후';
+      label = '$h시간 $m분 후';
       color = AppColors.textSecondary;
       bold = false;
     } else {

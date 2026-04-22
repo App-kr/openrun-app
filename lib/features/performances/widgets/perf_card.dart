@@ -79,7 +79,7 @@ class PerfCard extends StatelessWidget {
                               _TagPill(label: perf.region, bg: const Color(0xFF4A5568)),
                               _StatusTag(status: status),
                               if (perf.isFree)
-                                _TagPill(label: '무료', bg: const Color(0xFF2E7D32)),
+                                const _TagPill(label: '무료', bg: Color(0xFF2E7D32)),
                             ],
                           ),
                           const SizedBox(height: 7),
