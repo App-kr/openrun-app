@@ -34,7 +34,9 @@ class _AppErrorWidgetState extends State<AppErrorWidget> {
 
   void _startTimer() {
     _timer?.cancel();
-    setState(() => _countdown = 10);
+    // 재시도 횟수 남았으면 10초, 소진 후엔 30초 간격
+    final delay = _retriesLeft > 0 ? 10 : 30;
+    setState(() => _countdown = delay);
     _timer = Timer.periodic(const Duration(seconds: 1), (t) {
       if (!mounted) { t.cancel(); return; }
       setState(() => _countdown--);
@@ -42,8 +44,11 @@ class _AppErrorWidgetState extends State<AppErrorWidget> {
         t.cancel();
         if (_retriesLeft > 0) {
           setState(() => _retriesLeft--);
-          widget.onRetry!();
         }
+        // 재시도 횟수 소진 후에도 30초마다 자동 재연결 (무한)
+        widget.onRetry!();
+        // 재연결 후 다시 타이머 재시작 (onRetry가 성공하면 이 위젯은 dispose됨)
+        _startTimer();
       }
     });
   }
@@ -108,24 +113,11 @@ class _AppErrorWidgetState extends State<AppErrorWidget> {
                 ),
               ),
             ] else if (canRetry && _retriesLeft <= 0) ...[
+              // 재시도 소진 후에도 조용히 30초마다 자동 재연결
               const SizedBox(height: 24),
               const Text(
-                '서버에 연결할 수 없습니다.',
+                '서버 연결을 계속 시도 중입니다...',
                 style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
-              ),
-              const SizedBox(height: 12),
-              OutlinedButton.icon(
-                onPressed: () {
-                  setState(() => _retriesLeft = widget.maxRetries);
-                  _startTimer();
-                },
-                icon: const Icon(Icons.refresh_rounded, size: 18),
-                label: const Text('다시 시도'),
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size(160, 48),
-                  foregroundColor: AppColors.accent,
-                  side: const BorderSide(color: AppColors.accent),
-                ),
               ),
             ],
           ],

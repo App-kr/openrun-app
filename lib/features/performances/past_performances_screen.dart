@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,7 +7,8 @@ import '../../shared/services/api_service.dart';
 import 'models/performance.dart';
 import 'widgets/perf_card.dart';
 
-/// 지난 공연 화면 — performance_at < 오늘인 공연 목록
+/// 지난 공연 화면 — performance_at < 오늘
+/// 에러 시 자동 재시도 (지수 백오프), 앱 복귀 시 자동 갱신
 class PastPerformancesScreen extends ConsumerStatefulWidget {
   const PastPerformancesScreen({super.key});
 
@@ -15,46 +17,74 @@ class PastPerformancesScreen extends ConsumerStatefulWidget {
       _PastPerformancesScreenState();
 }
 
-class _PastPerformancesScreenState
-    extends ConsumerState<PastPerformancesScreen> {
+class _PastPerformancesScreenState extends ConsumerState<PastPerformancesScreen>
+    with WidgetsBindingObserver {
   List<Performance>? _perfs;
   bool _loading = true;
-  String? _error;
-  final String _category = 'all';
-  final String _region = 'all';
+  bool _retrying = false;
+  int _retryCount = 0;
+  Timer? _retryTimer;
+
+  // 지수 백오프 딜레이 (초)
+  static const _retryDelays = [2, 4, 8, 16, 30];
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _load();
   }
 
-  Future<void> _load() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
+  @override
+  void dispose() {
+    _retryTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /// 앱이 포그라운드로 돌아오면 자동 갱신
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _perfs != null) {
+      _load(silent: true);
+    }
+  }
+
+  Future<void> _load({bool silent = false}) async {
+    _retryTimer?.cancel();
+    if (!silent) {
+      setState(() {
+        _loading = true;
+        _retrying = false;
+      });
+    }
     try {
       final api = ref.read(apiServiceProvider);
-      final perfs = await api.fetchPastPerformances(
-        category: _category,
-        region: _region,
-        limit: 100,
-      );
-      if (mounted) {
-        setState(() {
-          _perfs = perfs;
-          _loading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _error = e.toString();
-          _loading = false;
-        });
-      }
+      final perfs = await api.fetchPastPerformances(limit: 100);
+      if (!mounted) return;
+      setState(() {
+        _perfs = perfs;
+        _loading = false;
+        _retrying = false;
+        _retryCount = 0;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      _scheduleRetry();
     }
+  }
+
+  void _scheduleRetry() {
+    final delay = _retryDelays[_retryCount.clamp(0, _retryDelays.length - 1)];
+    _retryCount++;
+    setState(() {
+      _loading = false;
+      _retrying = true;
+    });
+    _retryTimer = Timer(Duration(seconds: delay), () {
+      if (!mounted) return;
+      _load(silent: _perfs != null); // 데이터 있으면 화면 유지하며 백그라운드 갱신
+    });
   }
 
   @override
@@ -67,20 +97,21 @@ class _PastPerformancesScreenState
           icon: const Icon(Icons.arrow_back_ios_rounded),
           onPressed: () => context.pop(),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh_rounded),
-            tooltip: '새로고침',
-            onPressed: _load,
-          ),
-        ],
+        // 재시도 중 상태 표시 (앱바 하단 얇은 줄)
+        bottom: _retrying
+            ? const PreferredSize(
+                preferredSize: Size.fromHeight(2),
+                child: LinearProgressIndicator(minHeight: 2),
+              )
+            : null,
       ),
-      body: _build(),
+      body: _buildBody(),
     );
   }
 
-  Widget _build() {
-    if (_loading) {
+  Widget _buildBody() {
+    // 첫 로드 중
+    if (_loading && _perfs == null) {
       return const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -96,18 +127,24 @@ class _PastPerformancesScreenState
       );
     }
 
-    if (_error != null) {
+    // 데이터 없고 재시도 중 — 자동으로 다시 불러오는 중임을 조용히 표시
+    if (_perfs == null && _retrying) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: AppColors.textSecondary),
-            const SizedBox(height: 16),
-            const Text('공연 정보를 불러올 수 없습니다.'),
-            const SizedBox(height: 12),
-            FilledButton.tonal(
-              onPressed: _load,
-              child: const Text('다시 시도'),
+            const SizedBox(
+              width: 36,
+              height: 36,
+              child: CircularProgressIndicator(strokeWidth: 2.5),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              '서버 연결 중...',
+              style: TextStyle(
+                fontSize: 14,
+                color: AppColors.textSecondary.withAlpha(180),
+              ),
             ),
           ],
         ),
@@ -115,12 +152,14 @@ class _PastPerformancesScreenState
     }
 
     final perfs = _perfs ?? [];
+
     if (perfs.isEmpty) {
       return const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.event_available_outlined, size: 52, color: AppColors.textSecondary),
+            Icon(Icons.event_available_outlined,
+                size: 52, color: AppColors.textSecondary),
             SizedBox(height: 16),
             Text(
               '지난 공연이 없습니다.',
@@ -132,12 +171,12 @@ class _PastPerformancesScreenState
     }
 
     return RefreshIndicator(
-      onRefresh: _load,
+      onRefresh: () => _load(),
       child: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
               child: Text(
                 '총 ${perfs.length}건의 지난 공연',
                 style: const TextStyle(
