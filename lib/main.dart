@@ -1,4 +1,5 @@
-﻿import 'dart:io';
+﻿import 'dart:async';
+import 'dart:io';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -37,6 +38,10 @@ Future<void> main() async {
     // Firebase not configured for this platform — continue without notifications
   }
 
+  // Render 콜드스타트 방지: 4분마다 keep-alive ping
+  // Render free tier는 5분 비활성 시 슬립 → 4분 주기로 항상 깨어있게 유지
+  _startKeepAlivePing();
+
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
     debugPrint("FLUTTER_ERROR: ${details.exceptionAsString()}");
@@ -48,6 +53,23 @@ Future<void> main() async {
     return true;
   };
   runApp(const ProviderScope(child: TaekitApp()));
+}
+
+/// Render free tier 슬립 방지 — 4분마다 /health ping
+/// dart:io HttpClient 사용 (추가 패키지 불필요)
+void _startKeepAlivePing() {
+  Timer.periodic(const Duration(minutes: 4), (_) async {
+    try {
+      final client = HttpClient();
+      client.connectionTimeout = const Duration(seconds: 10);
+      final req = await client.getUrl(Uri.parse('$backendUrl/health'));
+      final res = await req.close();
+      await res.drain<void>();
+      client.close();
+    } catch (_) {
+      // 실패해도 무시 — 다음 주기에 재시도
+    }
+  });
 }
 
 class TaekitApp extends ConsumerWidget {

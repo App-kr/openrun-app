@@ -84,7 +84,7 @@ class _PerformanceListScreenState extends ConsumerState<PerformanceListScreen> {
             button: true,
             child: IconButton(
               icon: const Icon(Icons.refresh_rounded),
-              onPressed: () => ref.invalidate(performancesProvider),
+              onPressed: () => ref.read(performancesProvider(category: _category, region: _region).notifier).forceRefresh(),
             ),
           ),
         ],
@@ -104,12 +104,12 @@ class _PerformanceListScreenState extends ConsumerState<PerformanceListScreen> {
         children: [
           perfsAsync.when(
         loading: () => _WakingLoadingList(
-          onServerAwake: () => ref.invalidate(performancesProvider),
+          onServerAwake: () => ref.read(performancesProvider(category: _category, region: _region).notifier).forceRefresh(),
           api: ref.read(apiServiceProvider),
         ),
         error: (err, _) => AppErrorWidget(
           message: err.toString(),
-          onRetry: () => ref.invalidate(performancesProvider),
+          onRetry: () => ref.read(performancesProvider(category: _category, region: _region).notifier).forceRefresh(),
           maxRetries: 3,
         ),
         data: (result) {
@@ -149,7 +149,7 @@ class _PerformanceListScreenState extends ConsumerState<PerformanceListScreen> {
                             ),
                           ),
                           GestureDetector(
-                            onTap: () => ref.invalidate(performancesProvider),
+                            onTap: () => ref.read(performancesProvider(category: _category, region: _region).notifier).forceRefresh(),
                             child: const Text(
                               '새로고침',
                               style: TextStyle(
@@ -166,7 +166,7 @@ class _PerformanceListScreenState extends ConsumerState<PerformanceListScreen> {
                 ),
               Expanded(
                 child: RefreshIndicator(
-                  onRefresh: () async => ref.invalidate(performancesProvider),
+                  onRefresh: () async => ref.read(performancesProvider(category: _category, region: _region).notifier).forceRefresh(),
                   child: ListView.builder(
                     padding: const EdgeInsets.only(top: 8, bottom: 24),
                     itemCount: perfs.length + (_ads.isNotEmpty ? (perfs.length ~/ 10) : 0),
