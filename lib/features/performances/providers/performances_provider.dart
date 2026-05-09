@@ -5,12 +5,18 @@ import '../../../shared/services/cache_service.dart';
 
 part 'performances_provider.g.dart';
 
-/// Stale-while-revalidate: 캐시 즉시 표시 → 백그라운드 API 갱신
-/// 캐시 없을 때만 서버 응답 대기 (콜드스타트 UX 최소화)
+/// 로딩 전략 (멜론티켓/인터파크 패턴):
+/// 1. 캐시 있으면 즉시 표시 → 백그라운드 갱신
+/// 2. 캐시 없으면 API 대기 — 실패해도 에러 화면 없이 자동 재시도
+/// 3. 어떤 상황에서도 AsyncError 절대 발생 안 함
 @riverpod
 class Performances extends _$Performances {
   String _category = 'all';
   String _region = 'all';
+  bool _disposed = false;
+
+  // 지수 백오프 딜레이 (초)
+  static const _retryDelays = [3, 5, 10, 20, 30];
 
   @override
   Future<(List<Performance>, bool)> build({
@@ -19,55 +25,85 @@ class Performances extends _$Performances {
   }) async {
     _category = category;
     _region = region;
+    _disposed = false;
+    ref.onDispose(() => _disposed = true);
 
     final cache = ref.watch(cacheServiceProvider);
     final api = ref.watch(apiServiceProvider);
 
-    // 1. 캐시 즉시 로드
+    // ── STEP 1: 캐시 즉시 확인 ────────────────────────────────────────
     final cached = await cache.loadPerformances(category: category, region: region);
 
     if (cached.isNotEmpty) {
-      // 캐시 있으면 즉시 표시 + 백그라운드 갱신 예약
+      // 캐시 히트 → 즉시 반환 + 백그라운드 갱신
       _scheduleBackgroundRefresh(api, cache);
       return (cached, true);
     }
 
-    // 2. 캐시 없으면 서버 대기 (최초 실행)
-    try {
-      final fresh = await api.fetchPerformances(category: category, region: region);
-      return (fresh, false);
-    } catch (e) {
-      rethrow;
-    }
-  }
+    // ── STEP 2: 캐시 없음 → API 호출 (실패 시 자동 재시도 루프) ────────
+    for (var attempt = 0; ; attempt++) {
+      if (_disposed) return (const <Performance>[], false); // provider 재빌드 → 종료
 
-  /// 백그라운드에서 API 호출 후 로딩 없이 state 교체
-  void _scheduleBackgroundRefresh(ApiService api, CacheService cache) {
-    Future.delayed(const Duration(milliseconds: 100), () async {
       try {
         final fresh = await api.fetchPerformances(
           category: _category,
           region: _region,
         );
-        // 로딩 스피너 없이 데이터만 교체
-        if (!state.isLoading) {
-          state = AsyncData((fresh, false));
-        }
+        // 성공 → 캐시 저장 후 반환
+        cache.savePerformances(fresh, category: category, region: region)
+            .catchError((_) {});
+        return (fresh, false);
       } catch (_) {
-        // 백그라운드 갱신 실패 → 캐시 유지 (무시)
+        if (_disposed) return (const <Performance>[], false);
+        // 실패 → 지수 백오프 후 재시도 (shimmer 계속 표시)
+        final delay = _retryDelays[attempt.clamp(0, _retryDelays.length - 1)];
+        await Future.delayed(Duration(seconds: delay));
+      }
+    }
+  }
+
+  /// 백그라운드 갱신 — 로딩 스피너 없이 조용히 교체
+  void _scheduleBackgroundRefresh(ApiService api, CacheService cache) {
+    Future.delayed(const Duration(milliseconds: 150), () async {
+      if (_disposed) return;
+      try {
+        final fresh = await api.fetchPerformances(
+          category: _category,
+          region: _region,
+        );
+        if (_disposed || state.isLoading) return;
+        cache.savePerformances(fresh, category: _category, region: _region)
+            .catchError((_) {});
+        state = AsyncData((fresh, false));
+      } catch (_) {
+        // 백그라운드 실패 → 캐시 유지, 무시
       }
     });
   }
 
-  /// 강제 새로고침 (pull-to-refresh용)
+  /// Pull-to-refresh — 에러 발생해도 캐시 복원, 절대 AsyncError 없음
   Future<void> forceRefresh() async {
     state = const AsyncLoading();
     final api = ref.read(apiServiceProvider);
+    final cache = ref.read(cacheServiceProvider);
     try {
-      final fresh = await api.fetchPerformances(category: _category, region: _region);
+      final fresh = await api.fetchPerformances(
+        category: _category,
+        region: _region,
+      );
+      cache.savePerformances(fresh, category: _category, region: _region)
+          .catchError((_) {});
       state = AsyncData((fresh, false));
-    } catch (e) {
-      state = AsyncError(e, StackTrace.current);
+    } catch (_) {
+      // 실패 → 캐시로 복원 (없으면 빈 리스트, 로딩 상태 유지)
+      final cached = await cache.loadPerformances(
+        category: _category,
+        region: _region,
+      );
+      if (cached.isNotEmpty) {
+        state = AsyncData((cached, true));
+      }
+      // 캐시도 없으면 AsyncLoading 유지 → shimmer 계속
     }
   }
 }
