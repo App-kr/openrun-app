@@ -53,6 +53,17 @@ bool isAllowedBookingUrl(String url) {
   }
 }
 
+/// Supabase PostgREST는 snake_case로 반환 → Freezed 모델(camelCase)로 변환
+Map<String, dynamic> _snakeToCamel(Map<String, dynamic> m) {
+  String camelize(String s) {
+    final parts = s.split('_');
+    if (parts.length == 1) return s;
+    return parts[0] +
+        parts.skip(1).map((p) => p.isEmpty ? '' : p[0].toUpperCase() + p.substring(1)).join();
+  }
+  return m.map((k, v) => MapEntry(camelize(k), v));
+}
+
 class ApiService {
   final CacheService _cache;
   late final Dio _dio;
@@ -106,7 +117,17 @@ class ApiService {
 
       final rawList = resp.data['performances'] as List;
       final list = rawList
-          .map((e) => Performance.fromJson(e as Map<String, dynamic>))
+          .map((e) {
+            final m = _snakeToCamel(e as Map<String, dynamic>);
+            // ticket_open_at 없는 행은 앱에 표시하지 않음
+            if (m['ticketOpenAt'] == null) return null;
+            try {
+              return Performance.fromJson(m);
+            } catch (_) {
+              return null;
+            }
+          })
+          .whereType<Performance>()
           .toList();
 
       _cache.savePerformances(list, category: category, region: region).catchError((e) {
@@ -152,7 +173,16 @@ class ApiService {
       );
       final rawList = resp.data['performances'] as List;
       return rawList
-          .map((e) => Performance.fromJson(e as Map<String, dynamic>))
+          .map((e) {
+            final m = _snakeToCamel(e as Map<String, dynamic>);
+            if (m['ticketOpenAt'] == null) return null;
+            try {
+              return Performance.fromJson(m);
+            } catch (_) {
+              return null;
+            }
+          })
+          .whereType<Performance>()
           .toList();
     } catch (e, st) {
       debugPrint('[API] fetchPastPerformances error: $e\n$st');
