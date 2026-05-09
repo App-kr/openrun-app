@@ -81,6 +81,26 @@ class Performances extends _$Performances {
     });
   }
 
+  /// 화면 변화 없는 조용한 백그라운드 갱신 — 앱 포그라운드 복귀 시 사용
+  /// forceRefresh()와 달리 AsyncLoading을 설정하지 않아 shimmer가 표시되지 않음
+  Future<void> silentRefresh() async {
+    if (_disposed) return;
+    final api = ref.read(apiServiceProvider);
+    final cache = ref.read(cacheServiceProvider);
+    try {
+      final fresh = await api.fetchPerformances(
+        category: _category,
+        region: _region,
+      );
+      if (_disposed) return;
+      cache.savePerformances(fresh, category: _category, region: _region)
+          .catchError((_) {});
+      state = AsyncData((fresh, false));
+    } catch (_) {
+      // 실패 시 기존 상태 유지 (조용히 무시)
+    }
+  }
+
   /// Pull-to-refresh — 에러 발생해도 캐시 복원, 절대 AsyncError 없음
   Future<void> forceRefresh() async {
     state = const AsyncLoading();

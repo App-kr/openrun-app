@@ -19,7 +19,8 @@ class PerformanceListScreen extends ConsumerStatefulWidget {
       _PerformanceListScreenState();
 }
 
-class _PerformanceListScreenState extends ConsumerState<PerformanceListScreen> {
+class _PerformanceListScreenState extends ConsumerState<PerformanceListScreen>
+    with WidgetsBindingObserver {
   String _category = 'all';
   String _region = 'all';
   String _status = 'all';
@@ -28,7 +29,26 @@ class _PerformanceListScreenState extends ConsumerState<PerformanceListScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadAds();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /// 앱이 포그라운드로 복귀할 때 shimmer 없이 조용히 데이터 갱신
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      ref
+          .read(performancesProvider(
+                  category: _category, region: _region)
+              .notifier)
+          .silentRefresh();
+    }
   }
 
   Future<void> _loadAds() async {
