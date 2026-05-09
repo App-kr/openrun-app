@@ -31,8 +31,10 @@ _TicketStatus _getStatus(DateTime openAt) {
 class PerfCard extends StatelessWidget {
   final Performance perf;
   final VoidCallback? onTap;
+  /// 지난 공연 표시 모드 — 흐리게 + '종료' 배지
+  final bool isPast;
 
-  const PerfCard({super.key, required this.perf, this.onTap});
+  const PerfCard({super.key, required this.perf, this.onTap, this.isPast = false});
 
   @override
   Widget build(BuildContext context) {
@@ -41,9 +43,11 @@ class PerfCard extends StatelessWidget {
     final status = _getStatus(perf.ticketOpenAt);
 
     return Semantics(
-      label: '${perf.title}, ${perf.venue}, ${perf.region}',
+      label: '${perf.title}, ${perf.venue}, ${perf.region}${isPast ? ', 종료된 공연' : ''}',
       button: onTap != null,
-      child: Card(
+      child: Opacity(
+        opacity: isPast ? 0.72 : 1.0,
+        child: Card(
         margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
         elevation: 1,
         shape: RoundedRectangleBorder(
@@ -77,7 +81,10 @@ class PerfCard extends StatelessWidget {
                             children: [
                               _TagPill(label: genreLabel, bg: const Color(0xFF185FA5)),
                               _TagPill(label: perf.region, bg: const Color(0xFF4A5568)),
-                              _StatusTag(status: status),
+                              if (isPast)
+                                const _TagPill(label: '종료', bg: Color(0xFF78909C))
+                              else
+                                _StatusTag(status: status),
                               if (perf.isFree)
                                 const _TagPill(label: '무료', bg: Color(0xFF2E7D32)),
                             ],
@@ -142,6 +149,7 @@ class PerfCard extends StatelessWidget {
             ),
           ),
         ),
+      ),
       ),
     );
   }

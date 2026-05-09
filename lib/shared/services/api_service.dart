@@ -136,6 +136,30 @@ class ApiService {
     });
   }
 
+  Future<List<Performance>> fetchPastPerformances({
+    String category = 'all',
+    String region = 'all',
+    int limit = 50,
+  }) async {
+    try {
+      final resp = await _dio.get(
+        '/api/performances/past',
+        queryParameters: {
+          if (category != 'all') 'category': category,
+          if (region != 'all') 'region': region,
+          'limit': limit,
+        },
+      );
+      final rawList = resp.data['performances'] as List;
+      return rawList
+          .map((e) => Performance.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } catch (e, st) {
+      debugPrint('[API] fetchPastPerformances error: $e\n$st');
+      return [];
+    }
+  }
+
   Future<List<Map<String, dynamic>>> fetchAds() async {
     try {
       final resp = await _dio.get('/api/ads');

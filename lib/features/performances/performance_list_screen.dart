@@ -168,9 +168,15 @@ class _PerformanceListScreenState extends ConsumerState<PerformanceListScreen> {
                 child: RefreshIndicator(
                   onRefresh: () async => ref.read(performancesProvider(category: _category, region: _region).notifier).forceRefresh(),
                   child: ListView.builder(
-                    padding: const EdgeInsets.only(top: 8, bottom: 24),
-                    itemCount: perfs.length + (_ads.isNotEmpty ? (perfs.length ~/ 10) : 0),
+                    padding: const EdgeInsets.only(top: 8, bottom: 8),
+                    // +1 for "지난 공연 보기" footer
+                    itemCount: perfs.length + (_ads.isNotEmpty ? (perfs.length ~/ 10) : 0) + 1,
                     itemBuilder: (ctx, i) {
+                      final totalContentItems = perfs.length + (_ads.isNotEmpty ? (perfs.length ~/ 10) : 0);
+                      // 마지막 슬롯 — 지난 공연 버튼
+                      if (i == totalContentItems) {
+                        return _PastPerformancesButton(onTap: () => ctx.push('/performances/past'));
+                      }
                       // 매 11번째 슬롯 (인덱스 10, 21, 32...) 에 광고 삽입
                       if (_ads.isNotEmpty) {
                         final adSlots = i ~/ 11;
@@ -200,6 +206,48 @@ class _PerformanceListScreenState extends ConsumerState<PerformanceListScreen> {
       ),
           SessionStatusOverlay(api: ref.read(apiServiceProvider)),
         ],
+      ),
+    );
+  }
+}
+
+/// 지난 공연 보기 버튼 — 메인 목록 최하단
+class _PastPerformancesButton extends StatelessWidget {
+  final VoidCallback onTap;
+  const _PastPerformancesButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF1F5F9),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFCBD5E1), width: 1),
+          ),
+          child: const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.history_rounded, size: 18, color: Color(0xFF64748B)),
+              SizedBox(width: 8),
+              Text(
+                '지난 공연 보기',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF64748B),
+                ),
+              ),
+              SizedBox(width: 4),
+              Icon(Icons.chevron_right_rounded, size: 18, color: Color(0xFF94A3B8)),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -5,6 +5,7 @@ import '../features/onboarding/splash_screen.dart';
 import '../features/onboarding/intro_screen.dart';
 import '../features/performances/performance_list_screen.dart';
 import '../features/performances/performance_detail_screen.dart';
+import '../features/performances/past_performances_screen.dart';
 import '../features/alarms/alarm_list_screen.dart';
 import '../features/settings/settings_screen.dart';
 
@@ -24,6 +25,10 @@ GoRouter router(RouterRef ref) {
           GoRoute(path: '/alarms', builder: (_, __) => const AlarmListScreen()),
           GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),
         ],
+      ),
+      GoRoute(
+        path: '/performances/past',
+        builder: (_, __) => const PastPerformancesScreen(),
       ),
       GoRoute(
         path: '/performances/:id',
