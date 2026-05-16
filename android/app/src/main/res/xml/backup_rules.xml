@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Android 11 이하 백업 규칙 (android:fullBackupContent)
+    유효 domain: file | database | sharedpref | external | root
+-->
+<full-backup-content>
+    <!-- Firebase 설치 토큰 제외 (재발급됨) -->
+    <exclude domain="sharedpref"
+        path="com.google.firebase.installations.api.json"/>
+    <!-- 로컬 DB 제외 (서버에서 재로드됨) -->
+    <exclude domain="database" path="taekit.db"/>
+    <exclude domain="database" path="taekit_notifications.db"/>
+</full-backup-content>

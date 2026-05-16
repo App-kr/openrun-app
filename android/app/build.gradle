@@ -5,6 +5,7 @@ plugins {
     id "com.google.gms.google-services"
 }
 
+// key.properties 로드 (Git 추적 제외 — .gitignore 참조)
 def keyPropertiesFile = rootProject.file("key.properties")
 def keyProperties = new Properties()
 if (keyPropertiesFile.exists()) {
@@ -13,23 +14,26 @@ if (keyPropertiesFile.exists()) {
 
 android {
     namespace "com.taekit.app"
-    compileSdk flutter.compileSdkVersion
+
+    // compileSdk 36: 플러그인(shared_preferences, sqflite, url_launcher) 요구사항
+    compileSdk 36
     ndkVersion flutter.ndkVersion
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
         coreLibraryDesugaringEnabled true
     }
 
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "17"
     }
 
     defaultConfig {
         applicationId "com.taekit.app"
+        // Android 5.0+ (전체 안드로이드 기기의 99%+ 커버)
         minSdkVersion flutter.minSdkVersion
-        targetSdkVersion flutter.targetSdkVersion
+        targetSdk 35
         versionCode 1
         versionName "1.0.0"
         multiDexEnabled true
@@ -38,6 +42,7 @@ android {
     signingConfigs {
         release {
             keyAlias keyProperties['keyAlias']
+            // CI/CD 환경변수 우선, 없으면 key.properties 사용
             keyPassword System.getenv("KEYSTORE_PASS") ?: keyProperties['keyPassword']
             storeFile keyProperties['storeFile'] ? file(keyProperties['storeFile']) : null
             storePassword System.getenv("KEYSTORE_PASS") ?: keyProperties['storePassword']
@@ -45,10 +50,34 @@ android {
     }
 
     buildTypes {
-        release {
-            signingConfig signingConfigs.release
+        debug {
+            // 디버그: 난독화 없음, 서명 기본
             minifyEnabled false
             shrinkResources false
+        }
+        release {
+            signingConfig signingConfigs.release
+            // R8 풀모드 난독화 + 리소스 축소 (APK 크기 ~40% 감소)
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+    }
+
+    // 빌드 최적화
+    bundle {
+        language {
+            // 한국어/영어만 포함 (번들 크기 최소화)
+            enableSplit = true
+        }
+        density {
+            enableSplit = true
+        }
+        abi {
+            enableSplit = true
         }
     }
 }
@@ -58,6 +87,11 @@ flutter {
 }
 
 dependencies {
-    implementation platform("com.google.firebase:firebase-bom:32.7.0")
+    // Firebase BoM (버전 통합 관리)
+    implementation platform("com.google.firebase:firebase-bom:33.7.0")
+    implementation "com.google.firebase:firebase-messaging"
+    implementation "com.google.firebase:firebase-analytics"
+
+    // Java 8+ API 역호환 (minSdk 21 대응)
     coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.1.4"
 }

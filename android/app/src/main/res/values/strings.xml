@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 앱 이름 -->
+    <string name="app_name">Taekit</string>
+
+    <!-- FCM 알림 채널 -->
+    <string name="default_notification_channel_id">urgent_channel</string>
+    <string name="notification_channel_name">공연 알림</string>
+    <string name="notification_channel_description">티켓 오픈 및 공연 알림을 받습니다</string>
+</resources>

@@ -22,4 +22,4 @@ ios/Runner.xcworkspace/xcshareddata/
 *.log
 *.jks
 nul
-android/app/src/main/resmipmap-*/
+android/app/src/main/res/mipmap-*/

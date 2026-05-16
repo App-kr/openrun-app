@@ -91,11 +91,7 @@ class _PerformanceListScreenState extends ConsumerState<PerformanceListScreen>
             button: true,
             child: IconButton(
               icon: const Icon(Icons.notifications_outlined),
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('알림 설정 준비 중')),
-                );
-              },
+              onPressed: () => context.go('/alarms'),
             ),
           ),
           Semantics(

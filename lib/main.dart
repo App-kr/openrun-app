@@ -5,7 +5,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'core/router.dart';
 import 'core/theme.dart';
@@ -23,12 +22,6 @@ Future<void> main() async {
   if (Platform.isWindows || Platform.isLinux) {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
-  }
-
-  // Debug: reset onboarding so the flow is always visible during development
-  if (kDebugMode) {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('onboarding_complete');
   }
 
   try {
