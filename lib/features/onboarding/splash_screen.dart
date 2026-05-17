@@ -202,7 +202,7 @@ class _SplashScreenState extends State<SplashScreen> {
             ],
           ),
 
-          // ── Top center: "공연 알람🎵" spanning both halves ────────
+          // ── Top center: "택킷" branding spanning both halves ────────
           Positioned(
             top: 0,
             left: 0,
@@ -222,15 +222,15 @@ class _SplashScreenState extends State<SplashScreen> {
               child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.music_note_rounded, color: Colors.white, size: 22),
-                  SizedBox(width: 6),
+                  Icon(Icons.confirmation_number_rounded, color: Colors.white, size: 20),
+                  SizedBox(width: 7),
                   Text(
-                    '공연 알람',
+                    '택킷',
                     style: TextStyle(
-                      fontSize: 20,
+                      fontSize: 22,
                       fontWeight: FontWeight.w800,
                       color: Colors.white,
-                      letterSpacing: 0.5,
+                      letterSpacing: 1.0,
                       shadows: [Shadow(color: Colors.black54, blurRadius: 6)],
                     ),
                   ),

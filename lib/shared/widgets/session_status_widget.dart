@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 
@@ -82,6 +83,8 @@ class _SessionStatusOverlayState extends State<SessionStatusOverlay>
 
   @override
   Widget build(BuildContext context) {
+    // production 빌드에서는 표시하지 않음 (개발자 전용 위젯)
+    if (!kDebugMode) return const SizedBox.shrink();
     if (!_visible) return const SizedBox.shrink();
 
     final isOk = _serverOk == true;
