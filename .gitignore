@@ -22,4 +22,5 @@ ios/Runner.xcworkspace/xcshareddata/
 *.log
 *.jks
 nul
-android/app/src/main/res/mipmap-*/
+# mipmap 아이콘은 커밋 대상 (ic_launcher.png)
+
