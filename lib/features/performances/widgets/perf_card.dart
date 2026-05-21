@@ -3,20 +3,9 @@ import 'package:flutter/material.dart';
 import '../../../core/theme.dart';
 import '../models/performance.dart';
 import '../../../shared/utils/genre_icon_provider.dart';
+import '../../../shared/utils/html_utils.dart';
 import 'alarm_button_widget.dart';
 import 'countdown_timer.dart';
-
-// ── HTML entity decoder ────────────────────────────────────────────
-String _htmlDecode(String text) => text
-    .replaceAll('&#39;', "'")
-    .replaceAll('&amp;', '&')
-    .replaceAll('&lt;', '<')
-    .replaceAll('&gt;', '>')
-    .replaceAll('&quot;', '"')
-    .replaceAll('&#x27;', "'")
-    .replaceAll('&apos;', "'")
-    .replaceAll('&#34;', '"')
-    .replaceAll('&nbsp;', ' ');
 
 // ── Status helpers ─────────────────────────────────────────────────
 enum _TicketStatus { open, soonOpen, upcoming }
@@ -92,7 +81,7 @@ class PerfCard extends StatelessWidget {
                           const SizedBox(height: 7),
                           // Title
                           Text(
-                            _htmlDecode(perf.title),
+                            htmlDecode(perf.title),
                             style: const TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
@@ -120,6 +109,22 @@ class PerfCard extends StatelessWidget {
                             ),
                           ],
                           _PriceRow(perf: perf),
+                          // 공연 설명
+                          if (perf.programInfo != null && perf.programInfo!.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 6),
+                              child: Text(
+                                perf.programInfo!,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.textSecondary,
+                                  height: 1.4,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
                         ],
                       ),
                     ),
@@ -319,7 +324,11 @@ class _PosterImageState extends State<_PosterImage> {
               width: 80,
               height: 120,
               fit: BoxFit.cover,
-              placeholder: (_, __) => _placeholder(bgColor, fallbackIcon, fallbackColor),
+              placeholder: (_, __) => Image.asset(
+                isGugak ? 'assets/images/fallback_gugak.jpeg' : 'assets/images/fallback_classic.jpeg',
+                width: 80, height: 120, fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => _placeholder(bgColor, fallbackIcon, fallbackColor),
+              ),
               errorWidget: (_, __, ___) => _placeholder(bgColor, fallbackIcon, fallbackColor),
             )
           : _placeholder(bgColor, fallbackIcon, fallbackColor),
@@ -327,17 +336,27 @@ class _PosterImageState extends State<_PosterImage> {
   }
 
   Widget _placeholder(Color bg, IconData icon, Color iconColor) {
-    return Container(
-      width: 80,
-      height: 120,
-      color: bg,
-      child: Center(
-        child: Image(
-          image: AssetImage(_iconPath),
-          width: 44,
-          height: 44,
-          fit: BoxFit.contain,
-          errorBuilder: (_, __, ___) => Icon(icon, color: iconColor, size: 28),
+    final isGugak = widget.perf.category == 'gugak';
+    final fallbackAsset = isGugak
+        ? 'assets/images/fallback_gugak.jpeg'
+        : 'assets/images/fallback_classic.jpeg';
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: Image.asset(
+        fallbackAsset,
+        width: 80,
+        height: 120,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => Container(
+          width: 80,
+          height: 120,
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Center(
+            child: Icon(icon, color: iconColor, size: 28),
+          ),
         ),
       ),
     );

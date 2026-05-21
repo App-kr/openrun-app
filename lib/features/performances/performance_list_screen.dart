@@ -6,7 +6,6 @@ import '../../core/theme.dart';
 import 'providers/performances_provider.dart';
 import 'widgets/on_filter_bar.dart';
 import 'package:go_router/go_router.dart';
-import '../../shared/widgets/session_status_widget.dart';
 import '../../shared/services/api_service.dart';
 import 'widgets/ad_banner_card.dart';
 import 'widgets/perf_card.dart';
@@ -130,7 +129,6 @@ class _PerformanceListScreenState extends ConsumerState<PerformanceListScreen>
             // ── 데이터 ───────────────────────────────────────────────
             data: (result) {
               final perfs = _filterByStatus(result.$1);
-              final isFromCache = result.$2;
 
               // 빈 리스트 = 아직 로딩 중 (재시도 루프 실행 중)
               if (result.$1.isEmpty) return const _ShimmerList();
@@ -148,15 +146,6 @@ class _PerformanceListScreenState extends ConsumerState<PerformanceListScreen>
 
               return Column(
                 children: [
-                  // 캐시 데이터 표시 중 — 얇은 배너
-                  if (isFromCache)
-                    _CacheBanner(
-                      onRefresh: () => ref
-                          .read(performancesProvider(
-                                  category: _category, region: _region)
-                              .notifier)
-                          .forceRefresh(),
-                    ),
                   Expanded(
                     child: RefreshIndicator(
                       onRefresh: () async => ref
@@ -215,7 +204,7 @@ class _PerformanceListScreenState extends ConsumerState<PerformanceListScreen>
               );
             },
           ),
-          SessionStatusOverlay(api: ref.read(apiServiceProvider)),
+          // SessionStatusOverlay 비활성화 — 내부 로그로만 관리
         ],
       ),
     );
@@ -241,47 +230,6 @@ class _ShimmerList extends StatelessWidget {
             color: AppColors.white,
             borderRadius: BorderRadius.circular(14),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-// ── 캐시 배너 (오프라인 표시) ─────────────────────────────────────────────────
-class _CacheBanner extends StatelessWidget {
-  final VoidCallback onRefresh;
-  const _CacheBanner({required this.onRefresh});
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.gugakBg,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
-        child: Row(
-          children: [
-            const Icon(Icons.wifi_off_rounded,
-                size: 13, color: AppColors.gugakText),
-            const SizedBox(width: 6),
-            const Expanded(
-              child: Text(
-                '오프라인 — 저장된 데이터',
-                style:
-                    TextStyle(fontSize: 12, color: AppColors.gugakText),
-              ),
-            ),
-            GestureDetector(
-              onTap: onRefresh,
-              child: const Text(
-                '갱신',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.gugakText,
-                ),
-              ),
-            ),
-          ],
         ),
       ),
     );
