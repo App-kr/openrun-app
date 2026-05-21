@@ -83,7 +83,31 @@
     native <methods>;
 }
 
+# ── sqflite ──────────────────────────────────────────────────────────────────
+-keep class com.tekartik.sqflite.** { *; }
+-dontwarn com.tekartik.sqflite.**
+
+# ── sqflite_common_ffi (desktop only, Android에선 미사용이나 안전 보호) ────────
+-keep class com.github.** { *; }
+
+# ── go_router / Flutter navigation ───────────────────────────────────────────
+-keep class ** implements io.flutter.plugin.common.MethodChannel$MethodCallHandler { *; }
+
+# ── shared_preferences ────────────────────────────────────────────────────────
+-keep class io.flutter.plugins.sharedpreferences.** { *; }
+
+# ── url_launcher ──────────────────────────────────────────────────────────────
+-keep class io.flutter.plugins.urllauncher.** { *; }
+
+# ── cached_network_image / image loading ─────────────────────────────────────
+-keep class com.bumptech.glide.** { *; }
+-dontwarn com.bumptech.glide.**
+
+# ── timezone (dart) — JNI 없음, Dart-only ────────────────────────────────────
+
 # ── 불필요한 경고 제거 ────────────────────────────────────────────────────────
 -dontwarn javax.annotation.**
 -dontwarn org.codehaus.mojo.**
 -dontwarn edu.umd.cs.findbugs.annotations.**
+-dontwarn com.google.errorprone.**
+-dontwarn sun.misc.**

@@ -25,10 +25,13 @@ Future<void> main() async {
   }
 
   try {
-    await Firebase.initializeApp();
-    await NotificationService.instance.initialize();
+    // 타임아웃 10초: Firebase가 행(hang)될 경우 앱 시작 블로킹 방지
+    await Firebase.initializeApp()
+        .timeout(const Duration(seconds: 10));
+    await NotificationService.instance.initialize()
+        .timeout(const Duration(seconds: 10));
   } catch (_) {
-    // Firebase not configured for this platform — continue without notifications
+    // Firebase not configured or timed out — continue without notifications
   }
 
   // Render 콜드스타트 방지: 4분마다 keep-alive ping
