@@ -65,9 +65,7 @@ class AlarmButton extends ConsumerWidget {
     final minutesLeft = perf.ticketOpenAt.difference(now).inMinutes;
 
     final allOptions = [
-      (30,   '30분 전'),
       (60,   '1시간 전'),
-      (360,  '6시간 전'),
       (720,  '12시간 전'),
       (1440, '24시간 전'),
       (2880, '48시간 전'),
