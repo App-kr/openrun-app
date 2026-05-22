@@ -24,3 +24,9 @@ ios/Runner.xcworkspace/xcshareddata/
 nul
 # mipmap 아이콘은 커밋 대상 (ic_launcher.png)
 
+photos/
+store_screenshots/
+assets/와이드.jpeg
+assets/wide.jpeg
+assets/까치랑이.jpeg
+assets/아이콘.jpeg
