@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme.dart';
+import '../../features/alarms/alarm_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -13,10 +14,19 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   List<String> _cities = [];
   String _category = 'all';
+  String _soundMode = 'auto';
   bool _loadedPrefs = false;
 
   static const _allCities = [
     '서울', '경기', '부산', '인천', '광주', '대전', '대구', '기타',
+  ];
+
+  static const _soundModes = [
+    ('auto',    '자동 (장르별)',    Icons.auto_awesome_rounded),
+    ('gugak',   '국악 알림음',      Icons.music_note_rounded),
+    ('classic', '클래식 알림음',    Icons.piano_rounded),
+    ('default', '기본 알림음',      Icons.notifications_rounded),
+    ('silent',  '무음',             Icons.notifications_off_rounded),
   ];
 
   @override
@@ -28,8 +38,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _loadPrefs() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _cities = prefs.getStringList('selected_cities') ?? [];
-      _category = prefs.getString('selected_category') ?? 'all';
+      _cities     = prefs.getStringList('selected_cities') ?? [];
+      _category   = prefs.getString('selected_category') ?? 'all';
+      _soundMode  = prefs.getString(AlarmService.soundPrefKey) ?? 'auto';
       _loadedPrefs = true;
     });
   }
@@ -38,9 +49,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList('selected_cities', _cities);
     await prefs.setString('selected_category', _category);
+    // soundMode는 AlarmService.setSoundMode가 별도 저장
   }
 
-  // ── 장르 선택 BottomSheet ─────────────────────────────────────────
+  // ── 장르 선택 ─────────────────────────────────────────────
   Future<void> _showGenrePicker() async {
     final result = await showModalBottomSheet<String>(
       context: context,
@@ -56,7 +68,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  // ── 지역 선택 BottomSheet ─────────────────────────────────────────
+  // ── 지역 선택 ─────────────────────────────────────────────
   Future<void> _showCityPicker() async {
     final result = await showModalBottomSheet<List<String>>(
       context: context,
@@ -70,6 +82,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (result != null && mounted) {
       setState(() => _cities = result);
       await _savePrefs();
+    }
+  }
+
+  // ── 알림음 선택 ───────────────────────────────────────────
+  Future<void> _showSoundPicker() async {
+    final result = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => _SoundPicker(current: _soundMode, modes: _soundModes),
+    );
+    if (result != null && mounted) {
+      setState(() => _soundMode = result);
+      await AlarmService.instance.setSoundMode(result);
     }
   }
 
@@ -126,9 +154,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   String get _categoryLabel => switch (_category) {
     'classic' => '클래식',
-    'gugak' => '국악',
-    _ => '전체',
+    'gugak'   => '국악',
+    _         => '전체',
   };
+
+  String get _soundModeLabel {
+    for (final m in _soundModes) {
+      if (m.$1 == _soundMode) return m.$2;
+    }
+    return '자동 (장르별)';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -138,6 +173,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ? ListView(
               padding: const EdgeInsets.all(20),
               children: [
+                // ── 관심 설정 ─────────────────────────────────
                 const _SectionHeader('관심 설정'),
                 _SettingsTile(
                   icon: Icons.music_note_rounded,
@@ -152,11 +188,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onTap: _showCityPicker,
                 ),
                 const SizedBox(height: 24),
+
+                // ── 알림 설정 ─────────────────────────────────
+                const _SectionHeader('알림 설정'),
+                _SettingsTile(
+                  icon: Icons.volume_up_rounded,
+                  title: '알림음',
+                  subtitle: _soundModeLabel,
+                  onTap: _showSoundPicker,
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 4, bottom: 4, top: 2),
+                  child: Text(
+                    '국악·클래식 전용 알림음을 사용하려면 음원 파일을 추가하세요',
+                    style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // ── 앱 정보 ───────────────────────────────────
                 const _SectionHeader('앱 정보'),
                 const _SettingsTile(
                   icon: Icons.info_outline_rounded,
                   title: '버전',
-                  subtitle: '1.0.0',
+                  subtitle: '1.0.6',
                 ),
                 _SettingsTile(
                   icon: Icons.refresh_rounded,
@@ -182,6 +237,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   },
                 ),
                 const SizedBox(height: 24),
+
+                // ── 법적 정보 ─────────────────────────────────
                 const _SectionHeader('법적 정보'),
                 const _SettingsTile(
                   icon: Icons.copyright_rounded,
@@ -206,7 +263,73 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 }
 
-// ── 장르 선택 BottomSheet 내용 ────────────────────────────────────────────────
+// ── 알림음 선택 BottomSheet ───────────────────────────────────────────────────
+class _SoundPicker extends StatefulWidget {
+  final String current;
+  final List<(String, String, IconData)> modes;
+  const _SoundPicker({required this.current, required this.modes});
+
+  @override
+  State<_SoundPicker> createState() => _SoundPickerState();
+}
+
+class _SoundPickerState extends State<_SoundPicker> {
+  late String _selected;
+
+  @override
+  void initState() {
+    super.initState();
+    _selected = widget.current;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('알림음 선택',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 4),
+            Text(
+              '음원 파일(gugak_sound.mp3, classic_sound.mp3)을 추가하면 활성화됩니다',
+              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 16),
+            ...widget.modes.map((m) {
+              final (value, label, icon) = m;
+              final sel = _selected == value;
+              return ListTile(
+                leading: Icon(icon,
+                    color: sel ? AppColors.accent : AppColors.textSecondary),
+                title: Text(label,
+                    style: TextStyle(
+                      fontWeight: sel ? FontWeight.w700 : FontWeight.w400,
+                      color: sel ? AppColors.accent : AppColors.textPrimary,
+                    )),
+                trailing: sel
+                    ? const Icon(Icons.check_circle_rounded,
+                        color: AppColors.accent, size: 20)
+                    : null,
+                onTap: () {
+                  setState(() => _selected = value);
+                  Navigator.pop(context, value);
+                },
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── 장르 선택 BottomSheet ────────────────────────────────────────────────────
 class _GenrePicker extends StatefulWidget {
   final String current;
   const _GenrePicker({required this.current});
@@ -219,9 +342,9 @@ class _GenrePickerState extends State<_GenrePicker> {
   late String _selected;
 
   static const _genres = [
-    ('all', '전체', Icons.apps_rounded),
+    ('all',     '전체',   Icons.apps_rounded),
     ('classic', '클래식', Icons.piano_rounded),
-    ('gugak', '국악', Icons.music_note_rounded),
+    ('gugak',   '국악',   Icons.music_note_rounded),
   ];
 
   @override
@@ -272,7 +395,7 @@ class _GenrePickerState extends State<_GenrePicker> {
   }
 }
 
-// ── 지역 선택 BottomSheet 내용 ────────────────────────────────────────────────
+// ── 지역 선택 BottomSheet ────────────────────────────────────────────────────
 class _CityPicker extends StatefulWidget {
   final List<String> current;
   final List<String> allCities;
@@ -326,11 +449,8 @@ class _CityPickerState extends State<_CityPicker> {
                   selected: sel,
                   onSelected: (v) {
                     setState(() {
-                      if (v) {
-                        _selected.add(city);
-                      } else {
-                        _selected.remove(city);
-                      }
+                      if (v) _selected.add(city);
+                      else _selected.remove(city);
                     });
                   },
                   selectedColor: AppColors.accent.withValues(alpha: 0.15),
@@ -348,9 +468,7 @@ class _CityPickerState extends State<_CityPicker> {
             const SizedBox(height: 16),
             if (_selected.isNotEmpty)
               TextButton(
-                onPressed: () {
-                  setState(() => _selected.clear());
-                },
+                onPressed: () => setState(() => _selected.clear()),
                 child: const Text('전체 해제',
                     style: TextStyle(color: AppColors.textSecondary)),
               ),
@@ -362,7 +480,7 @@ class _CityPickerState extends State<_CityPicker> {
   }
 }
 
-// ── 공통 위젯 ─────────────────────────────────────────────────────────────────
+// ── 공통 위젯 ──────────────────────────────────────────────────────────────
 class _SectionHeader extends StatelessWidget {
   final String title;
   const _SectionHeader(this.title);
@@ -409,8 +527,7 @@ class _SettingsTile extends StatelessWidget {
         title: Text(title,
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
         subtitle: Text(subtitle,
-            style: const TextStyle(
-                fontSize: 14, color: AppColors.textSecondary)),
+            style: const TextStyle(fontSize: 14, color: AppColors.textSecondary)),
         trailing: onTap != null
             ? const Icon(Icons.arrow_forward_ios_rounded,
                 size: 14, color: AppColors.textSecondary)

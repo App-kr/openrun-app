@@ -16,18 +16,35 @@ ApiService apiService(ApiServiceRef ref) {
 
 // Booking URL whitelist — security
 const allowedBookingDomains = {
-  'bscc.or.kr',
+  // 서울
   'seoulphil.or.kr',
+  'lotteconcerthall.com',
+  'sacticket.co.kr',
+  'sac.or.kr',
+  'sejong.or.kr',
+  'sejongpac.or.kr',
+  'kbssym.or.kr',
+  'nationalopera.or.kr',
+  'naruart.or.kr',
+  'edu.junggu.seoul.kr',
+  // 국립
   'gugak.go.kr',
   'gugakbs.go.kr',
-  'timf.org',
+  'nationaltheater.or.kr',
+  // 지방
+  'bscc.or.kr',
+  'bscf.or.kr',
+  'classicbusan.busan.go.kr',
   'daeguconcethouse.or.kr',
-  'nationalopera.or.kr',
-  'gcf.or.kr',
   'artincheon.org',
+  'gcf.or.kr',
   'gjart.kr',
   'daejeonarts.or.kr',
-  // ticketing platforms
+  'timf.org',
+  'changwonart.or.kr',
+  'jinam.or.kr',
+  'ulmusic.or.kr',
+  // 티켓팅 플랫폼
   'interpark.com',
   'tickets.interpark.com',
   'ticket.yes24.com',
@@ -35,12 +52,6 @@ const allowedBookingDomains = {
   'ticketlink.co.kr',
   'melon.com',
   'naver.com',
-  'naruart.or.kr',
-  'edu.junggu.seoul.kr',
-  // legacy
-  'classicbusan.busan.go.kr',
-  'kbssym.or.kr',
-  'bscf.or.kr',
 };
 
 bool isAllowedBookingUrl(String url) {

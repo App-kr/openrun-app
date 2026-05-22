@@ -34,8 +34,8 @@ android {
         // Android 5.0+ (전체 안드로이드 기기의 99%+ 커버)
         minSdkVersion flutter.minSdkVersion
         targetSdk 35
-        versionCode 4
-        versionName "1.0.3"
+        versionCode 20
+        versionName "1.0.6"
         multiDexEnabled true
     }
 

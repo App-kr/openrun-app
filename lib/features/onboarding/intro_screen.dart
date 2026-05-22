@@ -15,36 +15,37 @@ class _IntroScreenState extends State<IntroScreen> {
 
   static const _slides = [
     _Slide(
-      bg1: Color(0xFF0D2B4E),
-      bg2: Color(0xFF1A3F6F),
-      icon: Icons.confirmation_number_outlined,
-      iconColor: Color(0xFF7EB3E8),
+      stepLabel: '01',
       title: '택킷에 오신 걸\n환영합니다',
-      subtitle: '클래식 · 국악 공연 티켓 오픈 알림\n한 곳에서 모아보세요',
+      body:
+          '클래식과 국악 공연의 티켓 오픈 알림을\n'
+          '한 곳에서 모아볼 수 있어요.\n\n'
+          '더 이상 티켓 오픈 시간을\n놓치지 마세요.',
     ),
     _Slide(
-      bg1: Color(0xFF0D2B4E),
-      bg2: Color(0xFF1B3A5C),
-      icon: Icons.notifications_active_outlined,
-      iconColor: Color(0xFFFFD97D),
-      title: '티켓 오픈 순간을\n놓치지 마세요',
-      subtitle: '원하는 공연을 저장하면\n오픈 전 알림을 보내드려요',
+      stepLabel: '02',
+      title: '전국 공연장\n한눈에',
+      body:
+          '예술의전당, 세종문화회관,\n'
+          '국립국악원, 롯데콘서트홀 등\n\n'
+          '전국 주요 공연장의 공연 일정을\n'
+          '통합해서 제공해요.',
     ),
     _Slide(
-      bg1: Color(0xFF12243A),
-      bg2: Color(0xFF0D2B4E),
-      icon: Icons.calendar_month_outlined,
-      iconColor: Color(0xFF90E0C0),
-      title: '전국 주요 공연장\n한눈에 보기',
-      subtitle: '예술의전당, 세종문화회관, 국립국악원 등\n국립 · 시립 공연장을 통합 제공해요',
+      stepLabel: '03',
+      title: '오픈 알림을\n미리 받으세요',
+      body:
+          '관심 공연을 저장하면\n'
+          '티켓 오픈 전 알림을 보내드려요.\n\n'
+          '10분 전, 1시간 전, 24시간 전 중\n원하는 시간을 선택하세요.',
     ),
     _Slide(
-      bg1: Color(0xFF1A3F6F),
-      bg2: Color(0xFF0D2B4E),
-      icon: Icons.music_note_outlined,
-      iconColor: Color(0xFFB39DDB),
-      title: '무료 입장 공연도\n바로 확인',
-      subtitle: '수수료 없이 즐기는 클래식 · 국악\n무료 공연 정보도 알려드려요',
+      stepLabel: '04',
+      title: '무료 공연도\n바로 확인',
+      body:
+          '수수료 없이 즐기는 클래식 · 국악\n'
+          '무료 공연 정보도 알려드려요.\n\n'
+          '지금 바로 시작해 보세요.',
     ),
   ];
 
@@ -66,8 +67,10 @@ class _IntroScreenState extends State<IntroScreen> {
     final isLast = _page == _slides.length - 1;
 
     return Scaffold(
+      backgroundColor: const Color(0xFF0D2B4E),
       body: Stack(
         children: [
+          // 슬라이드
           PageView.builder(
             controller: _ctrl,
             itemCount: _slides.length,
@@ -84,14 +87,14 @@ class _IntroScreenState extends State<IntroScreen> {
                 onPressed: _start,
                 child: const Text(
                   '건너뛰기',
-                  style: TextStyle(color: Colors.white70, fontSize: 14),
+                  style: TextStyle(color: Colors.white54, fontSize: 14),
                 ),
               ),
             ),
 
-          // 하단 인디케이터 + 버튼
+          // 하단 영역
           Positioned(
-            bottom: MediaQuery.of(context).padding.bottom + 32,
+            bottom: MediaQuery.of(context).padding.bottom + 28,
             left: 24,
             right: 24,
             child: Column(
@@ -102,28 +105,30 @@ class _IntroScreenState extends State<IntroScreen> {
                   children: List.generate(_slides.length, (i) {
                     final active = i == _page;
                     return AnimatedContainer(
-                      duration: const Duration(milliseconds: 250),
+                      duration: const Duration(milliseconds: 220),
                       margin: const EdgeInsets.symmetric(horizontal: 4),
-                      width: active ? 24 : 8,
-                      height: 8,
+                      width: active ? 28 : 7,
+                      height: 7,
                       decoration: BoxDecoration(
-                        color: active ? Colors.white : Colors.white30,
+                        color: active
+                            ? Colors.white
+                            : Colors.white.withValues(alpha: 0.28),
                         borderRadius: BorderRadius.circular(4),
                       ),
                     );
                   }),
                 ),
-                const SizedBox(height: 28),
+                const SizedBox(height: 24),
 
-                // 다음 / 시작하기 버튼
+                // 다음 / 시작하기
                 SizedBox(
                   width: double.infinity,
-                  height: 54,
+                  height: 52,
                   child: ElevatedButton(
                     onPressed: isLast
                         ? _start
                         : () => _ctrl.nextPage(
-                              duration: const Duration(milliseconds: 350),
+                              duration: const Duration(milliseconds: 300),
                               curve: Curves.easeInOut,
                             ),
                     style: ElevatedButton.styleFrom(
@@ -131,10 +136,10 @@ class _IntroScreenState extends State<IntroScreen> {
                       foregroundColor: const Color(0xFF0D2B4E),
                       elevation: 0,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       textStyle: const TextStyle(
-                        fontSize: 17,
+                        fontSize: 16,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -150,75 +155,81 @@ class _IntroScreenState extends State<IntroScreen> {
   }
 }
 
+// ── 데이터 ────────────────────────────────────────────────────────────────────
 class _Slide {
-  final Color bg1, bg2;
-  final IconData icon;
-  final Color iconColor;
-  final String title, subtitle;
+  final String stepLabel;
+  final String title;
+  final String body;
   const _Slide({
-    required this.bg1,
-    required this.bg2,
-    required this.icon,
-    required this.iconColor,
+    required this.stepLabel,
     required this.title,
-    required this.subtitle,
+    required this.body,
   });
 }
 
+// ── 슬라이드 페이지 (이미지/아이콘 없음, 순수 텍스트) ────────────────────────
 class _SlidePage extends StatelessWidget {
   final _Slide slide;
   const _SlidePage({required this.slide});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [slide.bg1, slide.bg2],
-        ),
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Spacer(flex: 2),
-              Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.08),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(slide.icon, size: 60, color: slide.iconColor),
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(32, 0, 32, 140),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Spacer(flex: 2),
+
+            // 단계 번호
+            Text(
+              slide.stepLabel,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: Colors.white.withValues(alpha: 0.4),
+                letterSpacing: 2.0,
               ),
-              const SizedBox(height: 48),
-              Text(
-                slide.title,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 28,
-                  fontWeight: FontWeight.w800,
-                  height: 1.35,
-                ),
+            ),
+            const SizedBox(height: 20),
+
+            // 제목
+            Text(
+              slide.title,
+              style: const TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+                height: 1.25,
               ),
-              const SizedBox(height: 16),
-              Text(
-                slide.subtitle,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.75),
-                  fontSize: 16,
-                  height: 1.6,
-                ),
+            ),
+            const SizedBox(height: 28),
+
+            // 구분선
+            Container(
+              width: 36,
+              height: 3,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(2),
               ),
-              const Spacer(flex: 3),
-            ],
-          ),
+            ),
+            const SizedBox(height: 28),
+
+            // 본문
+            Text(
+              slide.body,
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.white.withValues(alpha: 0.78),
+                height: 1.7,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+
+            const Spacer(flex: 3),
+          ],
         ),
       ),
     );

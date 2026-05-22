@@ -48,8 +48,8 @@ class _SessionStatusOverlayState extends State<SessionStatusOverlay>
       try {
         final perfs = await widget.api.fetchPerformances(limit: 500);
         total = perfs.length;
-        noPrice = perfs.where((p) => p.priceInfo == null || p.priceInfo!.isEmpty).length;
-        noPoster = perfs.where((p) => p.posterUrl == null || p.posterUrl!.isEmpty).length;
+        noPrice = perfs.where((p) => p.priceInfo?.isEmpty ?? true).length;
+        noPoster = perfs.where((p) => p.posterUrl?.isEmpty ?? true).length;
       } catch (_) {}
     }
 

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- 필수 권한 -->
     <uses-permission android:name="android.permission.INTERNET"/>
@@ -7,6 +8,8 @@
     <uses-permission android:name="android.permission.VIBRATE"/>
     <!-- Android 13+ 알림 권한 (런타임 요청) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- Firebase Analytics AD_ID 권한 완전 제거 (광고 ID 미사용) -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove"/>
     <!-- 정확한 알람 권한 (예매 오픈 D-1 알림) -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
     <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>

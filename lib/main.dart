@@ -5,7 +5,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'core/router.dart';
 import 'core/theme.dart';
 import 'shared/services/notification_service.dart';
@@ -17,12 +16,6 @@ const String backendUrl = String.fromEnvironment(
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // sqflite FFI init for Windows/Linux
-  if (Platform.isWindows || Platform.isLinux) {
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
-  }
 
   try {
     // 타임아웃 10초: Firebase가 행(hang)될 경우 앱 시작 블로킹 방지
