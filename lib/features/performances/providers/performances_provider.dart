@@ -125,8 +125,8 @@ class Performances extends _$Performances {
           return; // 성공하면 종료
         } catch (_) {
           if (attempt == 0) {
-            // 1차 실패 → 30초 대기 후 재시도 (Render 콜드스타트 대응)
-            await Future.delayed(const Duration(seconds: 30));
+            // 1차 실패 → 8초 대기 후 재시도 (Render 콜드스타트 대응)
+            await Future.delayed(const Duration(seconds: 8));
           }
           // 2차 실패 → 캐시 유지, 무시
         }

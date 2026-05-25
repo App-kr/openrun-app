@@ -82,8 +82,8 @@ class ApiService {
   ApiService(this._cache) {
     _dio = Dio(BaseOptions(
       baseUrl: backendUrl,
-      connectTimeout: const Duration(seconds: 120),
-      receiveTimeout: const Duration(seconds: 120),
+      connectTimeout: const Duration(seconds: 30),
+      receiveTimeout: const Duration(seconds: 30),
       headers: {'Content-Type': 'application/json'},
       responseDecoder: (responseBytes, options, responseBody) =>
           utf8.decode(responseBytes, allowMalformed: true),
