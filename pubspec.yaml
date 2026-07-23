@@ -1,8 +1,8 @@
 name: taekit
-description: 공연 티켓 오픈 알림 앱 — 택킷
+description: 怨듭뿰 ?곗폆 ?ㅽ뵂 ?뚮┝ ?????앺궥
 
 publish_to: 'none'
-version: 1.0.6+20
+version: 1.0.6+21
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
