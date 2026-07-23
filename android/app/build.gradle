@@ -5,7 +5,7 @@ plugins {
     id "com.google.gms.google-services"
 }
 
-// key.properties 濡쒕뱶 (Git 異붿쟻 ?쒖쇅 ??.gitignore 李몄“)
+// key.properties 嚥≪뮆諭?(Git ?곕뗄????뽰뇚 ??.gitignore 筌〓챷??
 def keyPropertiesFile = rootProject.file("key.properties")
 def keyProperties = new Properties()
 if (keyPropertiesFile.exists()) {
@@ -15,7 +15,7 @@ if (keyPropertiesFile.exists()) {
 android {
     namespace "com.taekit.app"
 
-    // compileSdk 36: ?뚮윭洹몄씤(shared_preferences, sqflite, url_launcher) ?붽뎄?ы빆
+    // compileSdk 36: ???쑎域밸챷??shared_preferences, sqflite, url_launcher) ?遺쎈럡??鍮?
     compileSdk 36
     ndkVersion flutter.ndkVersion
 
@@ -31,10 +31,10 @@ android {
 
     defaultConfig {
         applicationId "com.taekit.app"
-        // Android 5.0+ (?꾩껜 ?덈뱶濡쒖씠??湲곌린??99%+ 而ㅻ쾭)
+        // Android 5.0+ (?袁⑷퍥 ??덈굡嚥≪뮇???疫꿸퀗由??99%+ ?뚣끇苡?
         minSdkVersion flutter.minSdkVersion
         targetSdk 35
-        versionCode 21
+        versionCode 22
         versionName "1.0.6"
         multiDexEnabled true
     }
@@ -42,7 +42,7 @@ android {
     signingConfigs {
         release {
             keyAlias keyProperties['keyAlias']
-            // CI/CD ?섍꼍蹂???곗꽑, ?놁쑝硫?key.properties ?ъ슜
+            // CI/CD ??띻펾癰궰???怨쀪퐨, ??곸몵筌?key.properties ????
             keyPassword System.getenv("KEYSTORE_PASS") ?: keyProperties['keyPassword']
             storeFile keyProperties['storeFile'] ? file(keyProperties['storeFile']) : null
             storePassword System.getenv("KEYSTORE_PASS") ?: keyProperties['storePassword']
@@ -51,13 +51,13 @@ android {
 
     buildTypes {
         debug {
-            // ?붾쾭洹? ?쒕룆???놁쓬, ?쒕챸 湲곕낯
+            // ?遺얠쒔域? ??뺣즴????곸벉, ??뺤구 疫꿸퀡??
             minifyEnabled false
             shrinkResources false
         }
         release {
             signingConfig signingConfigs.release
-            // R8 ?紐⑤뱶 ?쒕룆??+ 由ъ냼??異뺤냼 (APK ?ш린 ~40% 媛먯냼)
+            // R8 ??筌뤴뫀諭???뺣즴??+ ?귐딅꺖???곕벡??(APK ??由?~40% 揶쏅Ŋ??
             minifyEnabled true
             shrinkResources true
             proguardFiles(
@@ -67,10 +67,10 @@ android {
         }
     }
 
-    // 鍮뚮뱶 理쒖쟻??
+    // ??슢諭?筌ㅼ뮇???
     bundle {
         language {
-            // ?쒓뎅???곸뼱留??ы븿 (踰덈뱾 ?ш린 理쒖냼??
+            // ??볥럢???怨몃선筌???釉?(甕곕뜄諭???由?筌ㅼ뮇???
             enableSplit = true
         }
         density {
@@ -87,8 +87,8 @@ flutter {
 }
 
 dependencies {
-    // Java 8+ API ??샇??(minSdk 21 ???
-    // Firebase SDK 踰꾩쟾? Flutter ?뚮윭洹몄씤(firebase_core, firebase_messaging)??愿由?
-    // BoM??蹂꾨룄 異붽??섎㈃ Flutter ?뚮윭洹몄씤 湲곕? 踰꾩쟾怨?異⑸룎 媛?????쒓굅
+    // Java 8+ API ?????(minSdk 21 ????
+    // Firebase SDK 甕곌쑴??? Flutter ???쑎域밸챷??firebase_core, firebase_messaging)???온??
+    // BoM??癰귢쑬猷??곕떽???롢늺 Flutter ???쑎域밸챷??疫꿸퀡? 甕곌쑴?얏??겸뫖猷?揶쎛??????볤탢
     coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.1.4"
 }
