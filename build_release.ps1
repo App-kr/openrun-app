@@ -2,13 +2,39 @@
 # 사용법: 우클릭 -> "PowerShell로 실행"
 # 또는 PowerShell에서: .\build_release.ps1
 
-Set-Location $PSScriptRoot
+$projectRoot = $PSScriptRoot
+Set-Location $projectRoot
 
 # BOM 없는 UTF-8로 저장 (BOM 있으면 Gradle 파서가 "Unexpected character '?'" 로 실패)
 function Set-Utf8NoBom {
     param([string]$Path, [string]$Content)
     $fullPath = Join-Path (Get-Location) $Path
     [System.IO.File]::WriteAllText($fullPath, $Content, (New-Object System.Text.UTF8Encoding($false)))
+}
+
+# 프로젝트 경로에 non-ASCII(한글 등) 포함 시 Dart AOT 스냅샷 생성기가 파일을
+# 못 읽는 문제가 있어, 빌드 동안만 임시 드라이브 문자로 매핑해 우회한다.
+$tempDriveLetter = $null
+if ($projectRoot -match '[^\x00-\x7F]') {
+    $usedLetters = (Get-PSDrive -PSProvider FileSystem).Name
+    foreach ($code in 90..65) {
+        $candidate = [char]$code
+        if ($usedLetters -notcontains $candidate) { $tempDriveLetter = $candidate; break }
+    }
+    if ($tempDriveLetter) {
+        Write-Host "  프로젝트 경로에 한글 포함 -> 임시 드라이브 ${tempDriveLetter}: 매핑" -ForegroundColor Yellow
+        & subst "${tempDriveLetter}:" $projectRoot | Out-Null
+        Set-Location "${tempDriveLetter}:\"
+    } else {
+        Write-Host "  WARN: 사용 가능한 드라이브 문자가 없어 한글 경로 우회를 건너뜁니다." -ForegroundColor Yellow
+    }
+}
+
+function Remove-TempDrive {
+    if ($tempDriveLetter) {
+        Set-Location $env:SystemDrive\
+        & subst "${tempDriveLetter}:" /D | Out-Null
+    }
 }
 
 # ── 1. pubspec.yaml에서 현재 버전 읽기 ──────────────────────────
@@ -18,6 +44,7 @@ if ($pubspec -match 'version:\s+(\d+\.\d+\.\d+)\+(\d+)') {
     $versionCode = [int]$matches[2]
 } else {
     Write-Host "ERROR: pubspec.yaml에서 version을 읽을 수 없습니다." -ForegroundColor Red
+    Remove-TempDrive
     exit 1
 }
 
@@ -61,6 +88,7 @@ if ($LASTEXITCODE -ne 0) {
     Set-Utf8NoBom "pubspec.yaml" $pubspec
     $gradle = $gradle -replace "versionCode \d+", "versionCode $versionCode"
     Set-Utf8NoBom "android/app/build.gradle" $gradle
+    Remove-TempDrive
     Read-Host "엔터를 눌러 종료"
     exit 1
 }
@@ -72,6 +100,7 @@ $dest     = "$env:USERPROFILE\Desktop\$destName"
 
 if (-not (Test-Path $src)) {
     Write-Host "ERROR: app-release.aab 파일을 찾을 수 없습니다." -ForegroundColor Red
+    Remove-TempDrive
     exit 1
 }
 
@@ -110,4 +139,5 @@ Write-Host "  3. Previous release 섹션의 구버전 번들 옆 ... -> Remove f
 Write-Host "  4. Next -> Save"
 Write-Host ""
 
+Remove-TempDrive
 Read-Host "엔터를 눌러 종료"
