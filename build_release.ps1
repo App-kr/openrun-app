@@ -4,6 +4,13 @@
 
 Set-Location $PSScriptRoot
 
+# BOM 없는 UTF-8로 저장 (BOM 있으면 Gradle 파서가 "Unexpected character '?'" 로 실패)
+function Set-Utf8NoBom {
+    param([string]$Path, [string]$Content)
+    $fullPath = Join-Path (Get-Location) $Path
+    [System.IO.File]::WriteAllText($fullPath, $Content, (New-Object System.Text.UTF8Encoding($false)))
+}
+
 # ── 1. pubspec.yaml에서 현재 버전 읽기 ──────────────────────────
 $pubspec = Get-Content "pubspec.yaml" -Raw
 if ($pubspec -match 'version:\s+(\d+\.\d+\.\d+)\+(\d+)') {
@@ -28,13 +35,13 @@ Write-Host ""
 
 # ── 3. pubspec.yaml 업데이트 ────────────────────────────────────
 $pubspec = $pubspec -replace "version:\s+\d+\.\d+\.\d+\+\d+", "version: $newVersion"
-Set-Content "pubspec.yaml" $pubspec -NoNewline
+Set-Utf8NoBom "pubspec.yaml" $pubspec
 
 # ── 4. build.gradle versionCode 동기화 ──────────────────────────
 $gradle = Get-Content "android/app/build.gradle" -Raw
 $gradle = $gradle -replace "versionCode \d+", "versionCode $newVersionCode"
 $gradle = $gradle -replace 'versionName "[^"]+"', "versionName `"$versionName`""
-Set-Content "android/app/build.gradle" $gradle -NoNewline
+Set-Utf8NoBom "android/app/build.gradle" $gradle
 
 Write-Host "빌드 시작..." -ForegroundColor Yellow
 Write-Host ""
@@ -51,9 +58,9 @@ if ($LASTEXITCODE -ne 0) {
     Write-Host ""
     Write-Host "ERROR: 빌드 실패 — pubspec.yaml 롤백 중..." -ForegroundColor Red
     $pubspec = $pubspec -replace "version:\s+\d+\.\d+\.\d+\+\d+", "version: ${versionName}+${versionCode}"
-    Set-Content "pubspec.yaml" $pubspec -NoNewline
+    Set-Utf8NoBom "pubspec.yaml" $pubspec
     $gradle = $gradle -replace "versionCode \d+", "versionCode $versionCode"
-    Set-Content "android/app/build.gradle" $gradle -NoNewline
+    Set-Utf8NoBom "android/app/build.gradle" $gradle
     Read-Host "엔터를 눌러 종료"
     exit 1
 }
