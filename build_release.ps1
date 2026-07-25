@@ -38,7 +38,10 @@ function Remove-TempDrive {
 }
 
 # ── 1. pubspec.yaml에서 현재 버전 읽기 ──────────────────────────
-$pubspec = Get-Content "pubspec.yaml" -Raw
+# Windows PowerShell 5.1의 Get-Content 기본 인코딩은 BOM 없는 파일을
+# 시스템 ANSI 코드페이지(예: cp949)로 오독한다 -> 한글이 깨져서 다시 저장됨.
+# 반드시 -Encoding UTF8 을 명시해 원본 그대로 읽는다.
+$pubspec = Get-Content "pubspec.yaml" -Raw -Encoding UTF8
 if ($pubspec -match 'version:\s+(\d+\.\d+\.\d+)\+(\d+)') {
     $versionName = $matches[1]
     $versionCode = [int]$matches[2]
@@ -65,7 +68,7 @@ $pubspec = $pubspec -replace "version:\s+\d+\.\d+\.\d+\+\d+", "version: $newVers
 Set-Utf8NoBom "pubspec.yaml" $pubspec
 
 # ── 4. build.gradle versionCode 동기화 ──────────────────────────
-$gradle = Get-Content "android/app/build.gradle" -Raw
+$gradle = Get-Content "android/app/build.gradle" -Raw -Encoding UTF8
 $gradle = $gradle -replace "versionCode \d+", "versionCode $newVersionCode"
 $gradle = $gradle -replace 'versionName "[^"]+"', "versionName `"$versionName`""
 Set-Utf8NoBom "android/app/build.gradle" $gradle
